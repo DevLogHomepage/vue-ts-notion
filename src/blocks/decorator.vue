@@ -2,9 +2,10 @@
 import { useNotionBlock, defineNotionProps } from "@/lib/blockable"
 import NotionKatek from "@/blocks/helpers/katex.vue"
 import { computed, PropType } from "vue"
+import { DecorationType } from "@/lib/types";
 
 const props = defineProps({
-  content: Object as PropType<string[] | string>,
+  content: Object as PropType<DecorationType[]>,
   ...defineNotionProps,
 })
 //@ts-ignore
@@ -20,7 +21,7 @@ const unappliedDecorators = computed(() => {
   return clonedDecorators
 })
 const nextContent = computed(() => [text.value, unappliedDecorators.value])
-const isPageLink = computed(() => text.value === "‣")
+const isPageLink = computed(() => text.value as string === "‣")
 const isInlinePageLink = computed(() => decoratorValue.value?.[0] === "/")
 const pageLinkTitle = computed(
   () => blockProps.blockMap?.[decoratorValue.value]?.value?.properties?.title?.[0]?.[0] || "link"

@@ -141,6 +141,7 @@
 }
 
 .notion * {
+  box-sizing: border-box;
   margin-block-start: 0;
   margin-block-end: 0;
 }
@@ -702,8 +703,8 @@ svg.notion-page-icon {
   object-fit: fill;
   border-radius: 3px;
   /* padding: 1px; */
-  max-width: 22px;
-  max-height: 22px;
+  /* max-width: 22px;
+  max-height: 22px; */
 }
 
 .notion-icon {
@@ -2490,4 +2491,89 @@ svg.notion-page-icon {
 :not(pre) > code[class*="language-"],
 pre[class*="language-"] {
   background: none !important;
+}
+
+.notion-database-table-block{
+  height: 40px;
+  width:100%;
+  padding: 0;
+  color:rgba(55,53,47,0.65);
+
+}
+.notion-database-table-header{
+  display: inline-flex;
+  margin: 0;
+  height: 100%;
+}
+.notion-database-table-header-cell{
+  display:flex;
+  flex-direction: row;
+}
+
+.notion-database-table-header-cell > div{
+  display:flex;
+  align-items: center;
+  background:none;
+  height: 100%;
+}
+
+
+.notion-database-table-row{
+  display: flex;
+  background: white;
+  z-index: 83;
+  height: 33px;
+  color: rgba(55, 53, 47, 0.65);
+  border-top: 1px solid rgb(233, 233, 231);
+  box-shadow: white -3px 0px 0px, rgb(233 233 231) 0px 1px 0px;
+  min-width: calc(100% - 0px);
+  left: 0px;
+  right: 0px;
+}
+
+.notion-database-table-row > tr{
+  display: inline-flex;
+  margin: 0;
+}
+
+.notion-database-table-row > tr > td{
+  display:flex;
+  flex-direction: row;
+}
+
+.notion-database-table-row > tr > td > div{
+  display:flex;
+  flex-shrink: 0;
+  overflow: hidden;
+  font-size: 14px;
+  padding: 0;
+  border-right: 1px solid rgba(55,53,47,0.09);
+
+}
+
+.notion-database-table-data.header{
+  color:rgb(55,53,46)
+}
+.notion-database-table-cell{
+  display: flex;
+  align-items: center;
+}
+
+.notion-database-table-text{
+  user-select: none;
+  transition: background 20ms ease-in 0s;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+  height: 28px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.2;
+  min-width: 0px;
+  padding-left: 8px;
+  padding-right: 8px;
+  font-weight: 500;
+  max-width: 220px;
 }

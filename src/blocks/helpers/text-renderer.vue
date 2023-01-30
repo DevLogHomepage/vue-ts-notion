@@ -2,8 +2,9 @@
 import { useNotionBlock, defineNotionProps } from "@/lib/blockable"
 import NotionDecorator from "@/blocks/decorator.vue"
 import { PropType } from "vue"
+import { DecorationType } from "@/lib/types";
 
-const props = defineProps({ text: Object as PropType<string[]>, ...defineNotionProps })
+const props = defineProps({ text: Object as PropType<DecorationType[]>, ...defineNotionProps })
 //@ts-ignore
 const { pass, format } = useNotionBlock(props)
 </script>

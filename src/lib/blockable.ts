@@ -1,6 +1,6 @@
 import { defaultMapImageUrl, defaultMapPageUrl } from "@/lib/utils"
 import { computed, PropType } from "vue"
-import { NotionBlockProps, BlockMap } from "./types"
+import { NotionBlockProps, BlockMap,BlockValue } from "./types"
 
 export const defineNotionProps = {
   blockMap: { type: Object as PropType<BlockMap>, required: true },
@@ -17,6 +17,11 @@ export const defineNotionProps = {
   prism: { type: Boolean, default: false },
   katex: { type: Boolean, default: false },
   textLinkTarget: { type: String, default: "_blank" },
+}
+
+export const defineDatabaseProps = {
+  collectionData:{type: Object as PropType<BlockValue>}
+  
 }
 
 export const useNotionBlock = (props: Readonly<NotionBlockProps>) => {

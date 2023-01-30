@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useNotionBlock, defineNotionProps } from "@/lib/blockable"
 import NotionTextRenderer from "@/blocks/helpers/text-renderer.vue"
+import { DecorationType } from "@/lib/types";
 
 const props = defineProps({ ...defineNotionProps })
 //@ts-ignore
