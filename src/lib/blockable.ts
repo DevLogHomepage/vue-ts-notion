@@ -1,6 +1,6 @@
 import { defaultMapImageUrl, defaultMapPageUrl } from "@/lib/utils"
 import { computed, PropType } from "vue"
-import { NotionBlockProps, BlockMap,BlockValue } from "./types"
+import { NotionBlockProps, BlockMap,BlockValue, DecorationType } from "./types"
 
 export const defineNotionProps = {
   blockMap: { type: Object as PropType<BlockMap>, required: true },

@@ -15,6 +15,7 @@ import { mapPageUrl, pageLinkOptions } from "../lib/props"
 // })
 
 const { data: blockMap } = useGetPageBlocks("0c996ac0bf5948e49f235c42efc80ce8")
+console.log(blockMap)
 </script>
 
 <template>

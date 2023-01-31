@@ -5,7 +5,7 @@ import { computed, PropType } from "vue"
 import { DecorationType } from "@/lib/types";
 
 const props = defineProps({
-  content: Object as PropType<DecorationType[]>,
+  content: Object as PropType<DecorationType>,
   ...defineNotionProps,
 })
 //@ts-ignore

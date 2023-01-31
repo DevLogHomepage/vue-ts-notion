@@ -27,4 +27,5 @@ export const availableType = [
   "table_of_contents",
   "transclusion_container",
   "transclusion_reference",
+  "collection_view"
 ]
