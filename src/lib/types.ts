@@ -52,7 +52,31 @@ export type ColumnType =
   | "url"
   | "status"
 
-
+  type FormulafunctionType = 
+  | "constant"
+  | "operator"
+  | "function"
+  | "conditional"
+  | "property"
+  
+  export type TableType =
+  | "date"
+  | "status"
+  | "select"
+  | "number"
+  | "phone_number"
+  | "multi_select"
+  | "email"
+  | "file"
+  | "person"
+  | "created_time"
+  | "checkbox"
+  | "created_by"
+  | "last_edited_by"
+  | "formula"
+  | "rollup"
+  | "url"
+  | "last_edited_time"
 
 type UserType = { id: string; full_name: string }
 
@@ -111,7 +135,7 @@ export interface tableValueProperties{
 export type ColumnSchemaType = {
   name: string;
   type: ColumnType;
-  formula:any
+  formula:Formula
 };
 
 
@@ -213,4 +237,24 @@ export type NotionBlockProps = {
   katex: boolean
   textLinkTarget: string
   collection:Collection
+}
+
+export type NotionDatabaseProps = {
+  collectionData:BlockValue
+}
+
+export type FormulaBaseType=
+    number
+    | boolean
+    | Date 
+    | string;
+
+export interface Formula {
+  id?: string,
+  args?: Formula[] | FormulaBaseType[],
+  name?: string,
+  type: FormulafunctionType,
+  value: FormulaBaseType,
+  operator?: string,
+  result_type: string
 }
