@@ -1,38 +1,27 @@
 <script setup lang="ts">
-import { computed, defineComponent, PropType } from 'vue'
-import type { DecorationType, BlockValue, Properties, TableBlockProperties } from '@/lib/types';
+import {  defineComponent, PropType, ref } from 'vue'
+import type {  BlockValue,  TableBlockProperties } from '@/lib/types';
 import { defineNotionProps,useNotionBlock } from '@/lib/blockable';
+import {useDatabase } from '@/lib/database'
 import NotionTextRenderer from '@/blocks/helpers/text-renderer.vue'
+import NotionDBTableCell from '@/blocks/helpers/database-table-cell.vue'
 
 const props = defineProps({collectionData:Object as PropType<BlockValue>, ...defineNotionProps })
 
 //@ts-ignore
-const { blockMap,pass } = useNotionBlock(props)
+const { pass } = useNotionBlock(props)
+//@ts-ignore
+const { schema,data,properties } = useDatabase(props)
 
-const collection = computed(() => props.collectionData)
-const format = computed(() => collection.value?.format)
-const properties = computed(() => format.value?.table_properties ?? [])
-const parent_id = computed(() => collection.value?.parent_id ?? '')
-const parent = computed(() => props.blockMap![parent_id.value])
-const data = computed(() => parent.value?.collection.data)
-const schema = computed(() => parent.value.collection.schema)
-
-const isheaderTitle = (rowIndex:number,columnProperty:TableBlockProperties) => {
-    if(!rowIndex) return [[schema.value[columnProperty.property].name]] as DecorationType[]
-    if(schema.value[columnProperty.property].formula){
-        testing(schema.value[columnProperty.property].formula.name,schema.value[columnProperty.property].formula.args)
-    }
-    return (data.value[rowIndex - 1][schema.value[columnProperty.property].name] ?? [[' ']] )as DecorationType[]
-}
+const tableValue = ref<{[key:string]:any}>({})
 
 const isVisible = (columnId:TableBlockProperties) => columnId.visible
-const testing = (type:string,...[arg]:any|undefined) => console.log('formula',type,arg)
 </script>
   
 <script lang="ts">
 export default defineComponent({
     name: "NotionDBTable",
-    components: {NotionTextRenderer}
+    components: {NotionDBTableCell}
 })
 </script>
 
@@ -47,11 +36,7 @@ export default defineComponent({
                 :class="{'header':(rowIndex - 1)}"
             >
                 <div :style="{width:`${columnProperty.width}PX`}" v-if="isVisible(columnProperty)" >
-                    <div class="notion-database-table-cell">
-                        <div class="notion-database-table-text">
-                            <NotionTextRenderer :text="isheaderTitle(rowIndex-1,columnProperty)" v-bind="pass"/>
-                        </div>
-                    </div>
+                    <NotionDBTableCell v-bind="pass" :collection-data="schema[columnProperty.property]" :data="data[rowIndex -2]"/> 
                 </div>
             </td>
         </tr>
