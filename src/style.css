@@ -18,6 +18,8 @@
   --select-color-1: rgba(45, 170, 219, 0.3);
   --select-color-2: #d9eff8;
 
+  --select-color-checkbox: rgb(35, 131, 221);
+
   --notion-red: rgb(224, 62, 62);
   --notion-pink: rgb(173, 26, 114);
   --notion-blue: rgb(11, 110, 153);
@@ -78,6 +80,9 @@
   --bg-color-0: rgb(71, 76, 80);
   --bg-color-1: rgb(63, 68, 71);
   --bg-color-2: rgba(135, 131, 120, 0.15);
+
+  --select-color-checkbox: rgb(35, 131, 221);
+
 
   --notion-red: rgb(255, 115, 105);
   --notion-pink: rgb(226, 85, 161);
@@ -2576,4 +2581,31 @@ pre[class*="language-"] {
   padding-right: 8px;
   font-weight: 500;
   max-width: 220px;
+}
+
+.checkbox-container{
+  width:16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.checkbox-icon-container{
+  height:16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.checkbox-icon-container > svg{
+  display: none;
+}
+
+.checkbox-true{
+  background-color: var(--select-color-checkbox);
+}
+
+.checkbox-true svg{
+  fill: white;
+  display: block;
 }
