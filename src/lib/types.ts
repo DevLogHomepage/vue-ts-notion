@@ -37,20 +37,26 @@ export type AdditionalDecorationType = [string, SubDecorationType[]]
 export type DecorationType = BaseDecorationType | AdditionalDecorationType
 
 export type ColumnType =
-  | "select"
-  | "text"
-  | "date"
-  | "person"
-  | "checkbox"
-  | "title"
-  | "multi_select"
-  | "number"
-  | "relation"
-  | "file"
-  | "email"
-  | "phone_number"
-  | "url"
-  | "status"
+  | "title" //1
+  | "date" //1
+  | "created_by" //1
+  | "status" //1
+  | "select" //1
+  | "last_edited_by" //1
+  | "person" //1
+  | "url" //1
+  | "phone_number" //1
+  | "multi_select" //1
+  | "email" //1
+  | "file" //1
+  | "relation" //1
+  | "create_time" //2
+  | "last_edited_time" //2
+  | "number" //3
+  | "checkbox" //4
+  | "formula" //4
+  | "rollup" //
+
 
   type FormulafunctionType = 
   | "constant"
@@ -128,14 +134,20 @@ export interface BaseValueType {
   name:string
 }
 
-export interface tableValueProperties{ 
-  [key: string]: DecorationType[] 
+export type tableValueProperties = {
+  [key: string]: DecorationType[]
+}&{
+  id: string
 }
 
 export type ColumnSchemaType = {
-  name: string;
-  type: ColumnType;
+  name: string
+  type: ColumnType
   formula:Formula
+  relation_property:string
+  target_property:string
+  aggregation:string
+  collection_id:string
 };
 
 
@@ -241,6 +253,7 @@ export type NotionBlockProps = {
 
 export type NotionDatabaseProps = {
   collectionData:BlockValue
+  tableMap:{[key:string]:{[dataId:string]:any}}
 }
 
 export type FormulaBaseType=
