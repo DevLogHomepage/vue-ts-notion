@@ -19,11 +19,6 @@ export const defineNotionProps = {
   textLinkTarget: { type: String, default: "_blank" },
 }
 
-export const defineDatabaseProps = {
-  collectionData:{type: Object as PropType<BlockValue>}
-  
-}
-
 export const useNotionBlock = (props: Readonly<NotionBlockProps>) => {
   const block = computed(() => {
     const id = props.contentId || Object.keys(props.blockMap)[0]
@@ -44,6 +39,7 @@ export const useNotionBlock = (props: Readonly<NotionBlockProps>) => {
       pageLinkOptions: props.pageLinkOptions,
       prism: props.prism,
       katex: props.katex,
+      collection:props.collection,
     }
   })
 
