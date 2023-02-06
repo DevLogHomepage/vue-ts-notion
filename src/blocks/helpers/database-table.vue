@@ -1,21 +1,26 @@
 <script setup lang="ts">
-import {  defineComponent, PropType, ref } from 'vue'
-import type {  BlockValue,  TableBlockProperties } from '@/lib/types';
+import { defineComponent, onMounted } from 'vue'
+import type { TableBlockProperties } from '@/lib/types';
 import { defineNotionProps,useNotionBlock } from '@/lib/blockable';
-import {useDatabase } from '@/lib/database'
-import NotionTextRenderer from '@/blocks/helpers/text-renderer.vue'
+import { useDatabase,defineDatabaseProps } from '@/lib/database'
 import NotionDBTableCell from '@/blocks/helpers/database-table-cell.vue'
 
-const props = defineProps({collectionData:Object as PropType<BlockValue>, ...defineNotionProps })
+const props = defineProps({...defineDatabaseProps, ...defineNotionProps })
 
 //@ts-ignore
 const { pass } = useNotionBlock(props)
 //@ts-ignore
-const { schema,data,properties } = useDatabase(props)
+const { schema,data,properties,setDBTable } = useDatabase(props)
 
-const tableValue = ref<{[key:string]:any}>({})
 
 const isVisible = (columnId:TableBlockProperties) => columnId.visible
+
+
+onMounted(() => {
+    data.value.forEach((d,i) => {
+        setDBTable(d.id,d)
+    })
+})
 </script>
   
 <script lang="ts">
@@ -35,8 +40,8 @@ export default defineComponent({
                 class="notion-database-table-data"
                 :class="{'header':(rowIndex - 1)}"
             >
-                <div :style="{width:`${columnProperty.width}PX`}" v-if="isVisible(columnProperty)" >
-                    <NotionDBTableCell v-bind="pass" :collection-data="schema[columnProperty.property]" :data="data[rowIndex -2]"/> 
+                <div :style="{width:`${columnProperty.width}PX`}" v-if="isVisible(columnProperty) && (schema[columnProperty.property] ?? false)" >
+                    <NotionDBTableCell v-bind="pass" :collection-data="props.collectionData" :schema-data="schema[columnProperty.property.replace('//','/')]" :data="data[rowIndex -2]"/> 
                 </div>
             </td>
         </tr>
