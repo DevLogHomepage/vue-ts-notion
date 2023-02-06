@@ -1,6 +1,7 @@
-import { computed } from "vue";
-import { NotionBlockProps,NotionDatabaseProps,Formula } from "./types";
+import { computed, PropType, ref } from "vue";
+import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, BaseDecorationType, tableValueProperties, BlockValue } from "./types";
 import type { Static } from "vue";
+import { useNotionBlock } from "./blockable";
 
 type FormulaBaseType=
     number
@@ -8,7 +9,28 @@ type FormulaBaseType=
     | string
     | Date 
 
+export const defineDatabaseProps = {
+    collectionData:{type: Object as PropType<BlockValue>},
+    tableMap:{type:Object as PropType<{[key:string]:{[dataId:string]:any}}>}
+}
+    
 export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabaseProps>) => {
+    const { pass:passBlock} = useNotionBlock(props)
+
+    const tableMap = ref<{[nameId:string]:any}>({})
+
+    const setDBTable = (dataId:string,data:any) => {
+        if(tableMap.value[dataId] == undefined)
+            tableMap.value[dataId] = data
+    }
+    
+    const getDBTable = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
+        console.log('getData',cellSchema,data)
+        if(!data) return cellSchema.name
+        if(tableMap.value[cellSchema?.name]) return tableMap.value[cellSchema.name]
+        return getContent(cellSchema,data)
+    }
+    
     const collection = computed(() => props.collectionData)
     const format = computed(() => collection.value?.format)
     const properties = computed(() => format?.value.table_properties ?? [])
@@ -18,8 +40,76 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
     const schema = computed(() => parent.value.collection.schema)
 
     const type = (t:string | string[]) => {
-        
+        if(Array.isArray(t)) return t.includes(props.collectionData!.type)
+        return props.collectionData!.type === t
     }
+
+    const rollup = (cellContent:ColumnSchemaType,data:tableValueProperties) => {
+        console.log('rollup',cellContent,data,props)
+        // const relationId = schema.value[cellContent.relation_property.replace('//','/')].collection_id
+        // const relationName = schema.value[cellContent.relation_property.replace('//','/')].name
+        // const targetProperty = cellContent.target_property
+        // if(!data) return []
+        // const targetDataId = data[relationName].filter(e => e?.[1]?.[0][1] != undefined).map(e => e?.[1]?.[0][1])
+
+        // const returnValue = targetDataId.forEach(id => {
+        //     console.log( props.blockMap)
+        //     console.log("collections id:", relationId)
+        //     const targetName = props.blockMap[relationId].collection.schema[targetProperty].name
+        //     props.blockMap[relationId].collection.data.filter(data => {
+        //         if(data.id === id)
+        //             data[targetName]
+        //     })
+        // })
+    
+
+        // return returnValue
+    }
+    const getContent = (cellContent:ColumnSchemaType,data:tableValueProperties) => {
+        console.log('getContent',data)
+        switch(cellContent.type){
+            case 'title':
+                return
+            case 'date':
+                return
+            case 'created_by':
+                return
+            case 'status':
+                return
+            case 'select':
+                return
+            case 'last_edited_by':
+                return
+            case 'person':
+                return
+            case 'url':
+                return
+            case 'phone_number':
+                return
+            case 'multi_select':
+                return
+            case 'email':
+                return
+            case 'file':
+                return
+            case 'relation':
+                return
+            case 'create_time':
+                return
+            case 'last_edited_time':
+                return
+            case 'number':
+                return
+            case 'checkbox':
+                return
+            case 'formula':
+                return
+            case 'rollup':
+                return rollup(cellContent,data)
+        }
+    }
+
+
     return{
         collection,
         format,
@@ -27,34 +117,42 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         parent_id,
         parent,
         data,
-        schema
+        schema,
+        type,
+        rollup,
+        getContent,
+        setDBTable,
+        getDBTable
+        // pass
     }
 }
 
 
+
 export const useFormula = (props: Readonly<NotionBlockProps & NotionDatabaseProps>) => {
-    const {schema} = useDatabase(props)
+    const {schema,type} = useDatabase(props)
 
-    const getContent = (type:Formula) => {
-        if(type.args){
-            (type.args as Formula[])?.forEach(e => {
-                getContent(e)
-            })
-        }
 
-        switch(type.type){
-            case 'constant':
-                return constant(type)
-            case 'function':
-                return function_(type)
-            case 'operator':
-                return operator(type)
-            case 'conditional':
-                return 
-            case 'property':
-                return property(type)
-        }
-    }
+    // const getContent = (type:Formula) => {
+    //     if(type.args){
+    //         (type.args as Formula[])?.forEach(e => {
+    //             getContent(e)
+    //         })
+    //     }
+
+    //     switch(type.type){
+    //         case 'constant':
+    //             return constant(type)
+    //         case 'function':
+    //             return function_(type)
+    //         case 'operator':
+    //             return operator(type)
+    //         case 'conditional':
+    //             return 
+    //         case 'property':
+    //             return property(type)
+    //     }     
+    // }
 
     const property = (type:Formula) => {
         schema.value[type.id as string]
@@ -241,6 +339,5 @@ export const useFormula = (props: Readonly<NotionBlockProps & NotionDatabaseProp
     return {
         operator,
         function_,
-        getContent
     }
 }
