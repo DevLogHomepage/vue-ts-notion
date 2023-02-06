@@ -12,10 +12,7 @@ const { pass } = useNotionBlock(props)
 //@ts-ignore
 const { schema,data,properties,setDBTable } = useDatabase(props)
 
-
 const isVisible = (columnId:TableBlockProperties) => columnId.visible
-
-
 onMounted(() => {
     data.value.forEach((d,i) => {
         setDBTable(d.id,d)
