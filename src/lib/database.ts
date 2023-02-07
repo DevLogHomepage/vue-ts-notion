@@ -9,25 +9,34 @@ type FormulaBaseType=
     | string
     | Date 
 
+type tableMapType = {[nameId:string]:any}
+
 export const defineDatabaseProps = {
     collectionData:{type: Object as PropType<BlockValue>},
-    tableMap:{type:Object as PropType<{[key:string]:{[dataId:string]:any}}>}
+    tableMap:{type:Object as PropType<tableMapType>}
 }
-    
+
+class TableMap{
+    static value = ref<tableMapType>({} as tableMapType)
+}
 export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabaseProps>) => {
     const { pass:passBlock} = useNotionBlock(props)
-
-    const tableMap = ref<{[nameId:string]:any}>({})
-
-    const setDBTable = (dataId:string,data:any) => {
-        if(tableMap.value[dataId] == undefined)
-            tableMap.value[dataId] = data
+    
+    // const tableMap = ref<tableMapType>({} as tableMapType)
+    // let tableMapTesting = {}
+    // const tableMap = {}
+    const setDBTable = (databaseId:string,dataId:string,data:any) => {
+        if(!data) return 
+        if(!TableMap.value.value[dataId] == undefined)
+        console.debug('[setDBTable]',databaseId,dataId,data)
+        console.debug('[tableMap]:',TableMap.value)
+        TableMap.value.value[dataId] = data
+        TableMap.value.value[dataId]['parent_id_title'] = databaseId
     }
     
     const getDBTable = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
-        console.log('getData',cellSchema,data)
         if(!data) return cellSchema.name
-        if(tableMap.value[cellSchema?.name]) return tableMap.value[cellSchema.name]
+        // if(TableMap.value.value[data.id]) return TableMap.value.value[data.id]
         return getContent(cellSchema,data)
     }
     
@@ -44,32 +53,25 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         return props.collectionData!.type === t
     }
 
-    const rollup = (cellContent:ColumnSchemaType,data:tableValueProperties) => {
-        console.log('rollup',cellContent,data,props)
-        // const relationId = schema.value[cellContent.relation_property.replace('//','/')].collection_id
-        // const relationName = schema.value[cellContent.relation_property.replace('//','/')].name
-        // const targetProperty = cellContent.target_property
-        // if(!data) return []
-        // const targetDataId = data[relationName].filter(e => e?.[1]?.[0][1] != undefined).map(e => e?.[1]?.[0][1])
-
-        // const returnValue = targetDataId.forEach(id => {
-        //     console.log( props.blockMap)
-        //     console.log("collections id:", relationId)
-        //     const targetName = props.blockMap[relationId].collection.schema[targetProperty].name
-        //     props.blockMap[relationId].collection.data.filter(data => {
-        //         if(data.id === id)
-        //             data[targetName]
-        //     })
-        // })
+    const rollup = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
+        const relationId = schema.value[cellSchema.relation_property.replace('//','/')].collection_id
+        const relationName = schema.value[cellSchema.relation_property.replace('//','/')].name
+        
+        const targetProperty = cellSchema.target_property
+        console.debug('[rollup]',relationId,relationName,targetProperty)
+        const targetDataId = data[relationName].filter(e => e?.[1]?.[0][1] != undefined).map(e => e?.[1]?.[0][1])
+        targetDataId.forEach(e => {
+            console.log(TableMap.value.value[e as string])
+        })
     
-
         // return returnValue
     }
     const getContent = (cellContent:ColumnSchemaType,data:tableValueProperties) => {
         console.log('getContent',data)
         switch(cellContent.type){
             case 'title':
-                return
+                // console.log('title',TableMap.value.value[data.id][cellContent.name])
+                return TableMap.value.value[data.id][cellContent.name]
             case 'date':
                 return
             case 'created_by':
