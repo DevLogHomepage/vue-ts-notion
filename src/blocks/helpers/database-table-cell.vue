@@ -3,6 +3,7 @@ import {  defineComponent, PropType } from 'vue'
 import type {  ColumnSchemaType, tableValueProperties } from '@/lib/types';
 import { defineNotionProps,useNotionBlock } from '@/lib/blockable';
 import { defineDatabaseProps, useDatabase } from '@/lib/database';
+import NotionTextRenderer from '@/blocks/helpers/text-renderer.vue'
 import CheckBoxIcon from './check-box-icon.vue';
 // import { formula } from '@/lib/math';
 
@@ -14,15 +15,15 @@ const props = defineProps({
 })
 
 //@ts-ignore
-const { blockMap,pass } = useNotionBlock(props)
+const { blockMap,pass,parent } = useNotionBlock(props)
 //@ts-ignore
 const { getDBTable } = useDatabase(props)
 
 
 
 const type = (t:string | string[]) => {
-    if(Array.isArray(t)) return t.includes(props.collectionData!.type)
-    return props.collectionData!.type === t
+    if(Array.isArray(t)) return t.includes(props.schemaData!.type)
+    return props.schemaData!.type === t
 }
 
 // const isTrue = computed(() => {return getText.value[0][0] === 'Yes'})
@@ -33,15 +34,17 @@ const type = (t:string | string[]) => {
 
 export default defineComponent({
     name: "NotionDBTableCell",
-    components: { CheckBoxIcon }
+    components: { CheckBoxIcon,NotionTextRenderer }
 })
 </script>
 
 <template>
     <div class="notion-database-table-cell">
         <div class="notion-database-table-text">
-
+            <!-- {{ parent.value.id }} -->
             {{ getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }}
+            <NotionTextRenderer v-if="type('title')" v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
+            
             <!-- <NotionTextRenderer v-if="!data" v-bind="pass" :text="getText"/>
             <NotionTextRenderer v-else-if="type(['date','status','select','number','phone_number','multi_select','email'])" v-bind="pass" :text="getText"/>
             <CheckBoxIcon v-else-if="type('checkbox')" :class="{'checkbox-true':isTrue}"/>
