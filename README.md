@@ -159,7 +159,7 @@ Most common block types are supported. We happily accept pull requests to add su
 | Checkbox          | ✅ Yes     |                        |
 | Simple Tables     | ✅ Yes     |                        |
 | Table Of Contents | ✅ Yes     |                        |
-| Databases         | ☑️ Planned |                        |
+| Databases         | ☑️ working on it |                        |
 
 Please, feel free to [open an issue](https://github.com/zernonia/vue3-notion/issues/new) if you notice any important blocks missing or anything wrong with existing blocks.
 
