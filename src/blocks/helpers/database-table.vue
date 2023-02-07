@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineComponent, onMounted } from 'vue'
+import { defineComponent, onBeforeMount, onMounted } from 'vue'
 import type { TableBlockProperties } from '@/lib/types';
 import { defineNotionProps,useNotionBlock } from '@/lib/blockable';
 import { useDatabase,defineDatabaseProps } from '@/lib/database'
@@ -8,16 +8,18 @@ import NotionDBTableCell from '@/blocks/helpers/database-table-cell.vue'
 const props = defineProps({...defineDatabaseProps, ...defineNotionProps })
 
 //@ts-ignore
-const { pass } = useNotionBlock(props)
+const { pass,parent } = useNotionBlock(props)
 //@ts-ignore
 const { schema,data,properties,setDBTable } = useDatabase(props)
 
 const isVisible = (columnId:TableBlockProperties) => columnId.visible
-onMounted(() => {
+
+onBeforeMount(() => {
     data.value.forEach((d,i) => {
-        setDBTable(d.id,d)
+        setDBTable(parent.value.value.id,d.id,d)
     })
 })
+
 </script>
   
 <script lang="ts">
