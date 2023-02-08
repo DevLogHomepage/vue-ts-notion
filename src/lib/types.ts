@@ -148,8 +148,14 @@ export type ColumnSchemaType = {
   target_property:string
   aggregation:string
   collection_id:string
+  options:SchemaSelectOption[]
 };
 
+export type SchemaSelectOption =   {
+  id:string,
+  color:string,
+  value:string
+}
 
 export interface BlockValue {
   id: string
