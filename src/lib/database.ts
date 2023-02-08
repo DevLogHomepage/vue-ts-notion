@@ -79,7 +79,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             case 'status':
                 return
             case 'select':
-                return
+                return TableMap.value.value[data.id][cellContent.name]
             case 'last_edited_by':
                 return
             case 'person':
@@ -89,7 +89,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             case 'phone_number':
                 return
             case 'multi_select':
-                return
+                return (TableMap.value.value[data.id][cellContent.name][0][0] as string).split(',').map(e => [e])
             case 'email':
                 return
             case 'file':
