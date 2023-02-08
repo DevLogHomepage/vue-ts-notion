@@ -52,20 +52,15 @@ export default defineComponent({
     <div class="notion-database-table-cell">
         <div class="notion-database-table-text">
             <!-- {{ getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }} -->
+            <!-- <NotionTextRenderer v-bind="pass" :text="[[1]]"/> -->
             <NotionTextRenderer v-if="!data" v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             <NotionTextRenderer v-else-if="type('title')" v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
-            <!-- <NotionTextRenderer v-else-if="type('select')" v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/> -->
-            <div v-else-if="type('select')">
-                <div v-for="e in getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" :style="{backgroundColor:`var(--notion-${options((e as DecorationType))})`}">
+            <div v-else-if="type(['multi_select','select'])" class="select_box_conatiner">
+                <div v-for="e in getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" :style="{backgroundColor:`var(--notion-select-${options((e as DecorationType))})`}" class="select_box">
                     <NotionTextRenderer v-bind="pass" :text="e"/>
                 </div>
             </div>
-            <div v-else-if="type('multi_select')">
-                <div v-for="e in getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" :style="{backgroundColor:`var(--notion-${options((e as DecorationType))})`}">
-                    <NotionTextRenderer v-bind="pass" :text="e"/>
-                </div>
-            </div>
-            
+            <NotionTextRenderer v-else-if="type('number')" v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" />
             <!-- <NotionTextRenderer v-if="!data" v-bind="pass" :text="getText"/>
             <NotionTextRenderer v-else-if="type(['date','status','select','number','phone_number','multi_select','email'])" v-bind="pass" :text="getText"/>
             <CheckBoxIcon v-else-if="type('checkbox')" :class="{'checkbox-true':isTrue}"/>

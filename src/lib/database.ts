@@ -35,7 +35,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
     }
     
     const getDBTable = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
-        if(!data) return cellSchema.name
+        if(!data) return [[cellSchema.name]]
         // if(TableMap.value.value[data.id]) return TableMap.value.value[data.id]
         return getContent(cellSchema,data)
     }
@@ -70,7 +70,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         console.log('getContent',data)
         switch(cellContent.type){
             case 'title':
-                // console.log('title',TableMap.value.value[data.id][cellContent.name])
+                console.log('title',TableMap.value.value[data.id][cellContent.name])
                 return TableMap.value.value[data.id][cellContent.name]
             case 'date':
                 return

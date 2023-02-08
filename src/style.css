@@ -63,6 +63,28 @@
 
   --notion-max-width: 720px;
   --notion-header-height: 45px;
+/* rgba(227, 226, 224 0.5 default
+  227,226,224 grey
+  238,224,218 brown
+  250,222,201 orange
+  253,236,200 yellow
+  219,237,219 green
+  211,229,239 blue
+  232,222,238 purple
+  245,224,233 pink
+  255,226,221 red
+*/
+  --notion-select-default: rgba(227, 226, 224,0.5);
+  --notion-select-grey: rgb(227,226,224);
+  --notion-select-brown: rgb(238,224,218 );
+  --notion-select-orange: rgb(250,222,201);
+  --notion-select-yellow: rgb(253,236,200);
+  --notion-select-green: rgb(219,237,219);
+  --notion-select-blue: rgb(211,229,239);
+  --notion-select-purple: rgb(232,222,238);
+  --notion-select-pink: rgb(245,224,233);
+  --notion-select-red: rgb(255,226,221);
+
 }
 
 .dark-mode {
@@ -2608,4 +2630,20 @@ pre[class*="language-"] {
 .checkbox-true svg{
   fill: white;
   display: block;
+}
+
+.select_box_conatiner{
+  display:flex;
+}
+
+.select_box{
+  padding-left:6px;
+  padding-right: 6px;
+  font-size:  14px;
+  height: 20px;
+  line-height: 120%;
+  display: flex;
+  align-items: center;
+  margin-right: 6px;
+  border-radius: 3px;
 }
