@@ -2584,6 +2584,8 @@ pre[class*="language-"] {
 .notion-database-table-cell{
   display: flex;
   align-items: center;
+  width:100%;
+
 }
 
 .notion-database-table-text{
@@ -2603,6 +2605,7 @@ pre[class*="language-"] {
   padding-right: 8px;
   font-weight: 500;
   max-width: 220px;
+  width:100%;
 }
 
 .checkbox-container{
@@ -2632,11 +2635,11 @@ pre[class*="language-"] {
   display: block;
 }
 
-.select_box_conatiner{
+.dataabase-selectbox-conatiner{
   display:flex;
 }
 
-.select_box{
+.database-selectbox{
   padding-left:6px;
   padding-right: 6px;
   font-size:  14px;
@@ -2646,4 +2649,10 @@ pre[class*="language-"] {
   align-items: center;
   margin-right: 6px;
   border-radius: 3px;
+}
+
+.database-number{
+  width:100%;
+  display:flex;
+  justify-content: flex-end
 }

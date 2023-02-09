@@ -18,7 +18,6 @@ const setDisplayTable = (_:MouseEvent,index:number) => {typesNumber.value  = ind
 const underLine = (index:number) => (typesNumber.value === index) ? {borderBottom: 'solid 2px rgb(55,53,47)',paddingTop:'2px',color: 'rgba(55,53,47,1)'} : ''
 
 const tableTypes = computed(() => {
-    console.log(block?.value.collection.types)
     return block?.value.collection.types
 })
 

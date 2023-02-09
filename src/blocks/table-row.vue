@@ -14,7 +14,6 @@ const {
 } = parent.value.value.format
 
 const cell = (columnId: string) => {
-  console.log(properties.value[columnId])
   return properties.value[columnId]
 }
 const isHeader = (columnIndex: number) => {

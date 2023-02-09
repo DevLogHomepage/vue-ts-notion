@@ -35,7 +35,6 @@ const headerObjects = computed(() => {
 
   return temp
 })
-console.log(headerObjects)
 </script>
 
 <script lang="ts">

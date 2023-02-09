@@ -67,19 +67,18 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         // return returnValue
     }
     const getContent = (cellContent:ColumnSchemaType,data:tableValueProperties) => {
-        console.log('getContent',data)
         switch(cellContent.type){
             case 'title':
-                console.log('title',TableMap.value.value[data.id][cellContent.name])
                 return TableMap.value.value[data.id][cellContent.name]
             case 'date':
                 return
             case 'created_by':
                 return
             case 'status':
-                return
+                console.log('status',TableMap.value.value[data.id])
+                return [TableMap.value.value[data.id][cellContent.name] ?? [[' ']]]
             case 'select':
-                return TableMap.value.value[data.id][cellContent.name]
+                return [TableMap.value.value[data.id][cellContent.name]]
             case 'last_edited_by':
                 return
             case 'person':
@@ -89,7 +88,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             case 'phone_number':
                 return
             case 'multi_select':
-                return (TableMap.value.value[data.id][cellContent.name][0][0] as string).split(',').map(e => [e])
+                return (TableMap.value.value[data.id][cellContent.name][0][0] as string).split(',').map(e => [[e]])
             case 'email':
                 return
             case 'file':
@@ -101,7 +100,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             case 'last_edited_time':
                 return
             case 'number':
-                return
+                return TableMap.value.value[data.id][cellContent.name]
             case 'checkbox':
                 return
             case 'formula':

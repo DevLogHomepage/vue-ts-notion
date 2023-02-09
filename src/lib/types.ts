@@ -149,12 +149,19 @@ export type ColumnSchemaType = {
   aggregation:string
   collection_id:string
   options:SchemaSelectOption[]
+  groups:SchemaSelectGroup[]
 };
 
 export type SchemaSelectOption =   {
   id:string,
   color:string,
   value:string
+}
+
+export type SchemaSelectGroup =   {
+  id:string,
+  color:string,
+  name:string
 }
 
 export interface BlockValue {
