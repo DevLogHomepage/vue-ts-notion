@@ -23,7 +23,7 @@ export default {
     components:{NotionDBTable}
 }
 
-  </script>
+</script>
 
 <template>
   <div>
