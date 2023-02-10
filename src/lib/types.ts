@@ -6,13 +6,15 @@ export type StrikeFormatType = ["s"];
 export type CodeFormatType = ["c"];
 export type KatexFormatType = ["e"];
 export type unKnownFormatType = ["h"]; //TODO: need to change this type name
+export type UnderLineFormatType = ["_"]; //TODO: need to change this type name
 export type LinkFormatType = ["a", string];
 export type DateFormatType = [
   "d",
   {
-    type: "date";
-    start_date: string;
-    date_format: string;
+    type: "date"
+    start_date: string
+    end_date: string
+    date_format: string
   }
 ];
 
@@ -25,6 +27,7 @@ export type SubDecorationType =
   | CodeFormatType
   | LinkFormatType
   | DateFormatType
+  | UnderLineFormatType
   | UserFormatType
   | KatexFormatType
   | unKnownFormatType
@@ -150,6 +153,7 @@ export type ColumnSchemaType = {
   collection_id:string
   options:SchemaSelectOption[]
   groups:SchemaSelectGroup[]
+  date_format:string
 };
 
 export type SchemaSelectOption =   {
