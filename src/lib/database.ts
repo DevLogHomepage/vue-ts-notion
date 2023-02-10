@@ -3,6 +3,8 @@ import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, BaseDec
 import type { Static } from "vue";
 import { useNotionBlock } from "./blockable";
 
+import moment from 'moment'
+
 type FormulaBaseType=
     number
     | boolean
@@ -20,11 +22,7 @@ class TableMap{
     static value = ref<tableMapType>({} as tableMapType)
 }
 export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabaseProps>) => {
-    const { pass:passBlock} = useNotionBlock(props)
     
-    // const tableMap = ref<tableMapType>({} as tableMapType)
-    // let tableMapTesting = {}
-    // const tableMap = {}
     const setDBTable = (databaseId:string,dataId:string,data:any) => {
         if(!data) return 
         if(!TableMap.value.value[dataId] == undefined)
@@ -36,7 +34,6 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
     
     const getDBTable = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
         if(!data) return [[cellSchema.name]]
-        // if(TableMap.value.value[data.id]) return TableMap.value.value[data.id]
         return getContent(cellSchema,data)
     }
     
@@ -71,11 +68,12 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             case 'title':
                 return TableMap.value.value[data.id][cellContent.name]
             case 'date':
-                return
+                if(TableMap.value.value[data.id][cellContent.name]?.[0][1])
+                    return [[cellContent.date_format ?? 'll',TableMap.value.value[data.id][cellContent.name]?.[0][1]]]
+                return [[undefined]] 
             case 'created_by':
                 return
             case 'status':
-                console.log('status',TableMap.value.value[data.id])
                 return [TableMap.value.value[data.id][cellContent.name] ?? [[' ']]]
             case 'select':
                 return [TableMap.value.value[data.id][cellContent.name]]
@@ -124,7 +122,6 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         getContent,
         setDBTable,
         getDBTable
-        // pass
     }
 }
 
