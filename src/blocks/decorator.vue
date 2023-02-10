@@ -3,6 +3,7 @@ import { useNotionBlock, defineNotionProps } from "@/lib/blockable"
 import NotionKatek from "@/blocks/helpers/katex.vue"
 import { computed, PropType } from "vue"
 import { DecorationType } from "@/lib/types";
+import moment from 'moment'
 
 const props = defineProps({
   content: Object as PropType<DecorationType>,
@@ -20,11 +21,11 @@ const unappliedDecorators = computed(() => {
   clonedDecorators.shift() // remove applied decorator
   return clonedDecorators
 })
-const nextContent = computed(() => [text.value, unappliedDecorators.value])
+const nextContent = computed(() => [text.value, unappliedDecorators.value] as DecorationType)
 const isPageLink = computed(() => text.value as string === "‣")
-const isInlinePageLink = computed(() => decoratorValue.value?.[0] === "/")
+const isInlinePageLink = computed(() => (decoratorValue.value as string)?.[0] === "/")
 const pageLinkTitle = computed(
-  () => blockProps.blockMap?.[decoratorValue.value]?.value?.properties?.title?.[0]?.[0] || "link"
+  () => blockProps.blockMap?.[decoratorValue.value as string]?.value?.properties?.title?.[0]?.[0] || "link"
 )
 const target = computed(() => {
   if (type.value === "page") {
@@ -32,6 +33,12 @@ const target = computed(() => {
   }
   return blockProps.textLinkTarget
 })
+
+const dateFormated = (date:string) => {
+  console.log('format',moment(date).format(text.value as string),text.value)
+  if(!date) return ''
+  return moment(date).format(text.value as string)
+}
 </script>
 
 <script lang="ts">
@@ -44,22 +51,19 @@ export default {
   <component
     v-if="isPageLink && hasPageLinkOptions"
     class="notion-link"
-    v-bind="pageLinkProps(decoratorValue)"
+    v-bind="pageLinkProps(decoratorValue as string)"
     :is="blockProps.pageLinkOptions?.component"
   >
     {{ pageLinkTitle }}
   </component>
-  <a
-    v-else-if="isPageLink"
-    class="notion-link"
-    :target="blockProps.pageLinkTarget"
-    :href="blockProps.mapPageUrl(decoratorValue)"
-    >{{ pageLinkTitle }}</a
-  >
+  <span v-else-if="decoratorKey === 'd'" v-if="decoratorValue">
+    <div>{{ dateFormated(decoratorValue.start_date) }}</div>
+    <div v-if="decoratorValue.end_date"> → {{ dateFormated(decoratorValue.end_date) }}</div>
+  </span>
   <component
     v-else-if="decoratorKey === 'a' && hasPageLinkOptions && isInlinePageLink"
     class="notion-link"
-    v-bind="pageLinkProps(decoratorValue.slice(1))"
+    v-bind="pageLinkProps((decoratorValue as string).slice(1))"
     :is="blockProps.pageLinkOptions?.component"
   >
     <NotionDecorator :content="nextContent" v-bind="pass" />
@@ -68,11 +72,11 @@ export default {
     v-else-if="decoratorKey === 'a' && isInlinePageLink"
     class="notion-link"
     :target="target"
-    :href="blockProps.mapPageUrl(decoratorValue.slice(1))"
+    :href="blockProps.mapPageUrl((decoratorValue as string).slice(1))"
   >
     <NotionDecorator :content="nextContent" v-bind="pass" />
   </a>
-  <a v-else-if="decoratorKey === 'a'" class="notion-link" :target="target" :href="decoratorValue">
+  <a v-else-if="decoratorKey === 'a'" class="notion-link" :target="target" :href="(decoratorValue as string)">
     <NotionDecorator :content="nextContent" v-bind="pass" />
   </a>
   <span v-else-if="decorators.length === 0">{{ text }}</span>
@@ -94,9 +98,16 @@ export default {
   <u v-else-if="decoratorKey === '_'" class="notion-underline">
     <NotionDecorator :content="nextContent" v-bind="pass" />
   </u>
-  <NotionKatek v-else-if="decoratorKey === 'e' && blockProps.katex" :expression="decoratorValue" />
+  <NotionKatek v-else-if="decoratorKey === 'e' && blockProps.katex" :expression="(decoratorValue as string)" />
   <code v-else-if="decoratorKey === 'e'" class="notion-inline-code">
     {{ decoratorValue }}
   </code>
+  <a
+    v-else-if="isPageLink"
+    class="notion-link"
+    :target="blockProps.pageLinkTarget"
+    :href="blockProps.mapPageUrl(decoratorValue)"
+    >{{ pageLinkTitle }}</a
+  >
   <NotionDecorator v-else :content="nextContent" v-bind="pass" />
 </template>
