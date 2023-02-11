@@ -23,6 +23,8 @@ const unappliedDecorators = computed(() => {
 })
 const nextContent = computed(() => [text.value, unappliedDecorators.value] as DecorationType)
 const isPageLink = computed(() => text.value as string === "‣")
+const isFileMedia = computed(() => text.value as string === "file‣")
+const isUnderLine = computed(() => text.value as string === "_")
 const isInlinePageLink = computed(() => (decoratorValue.value as string)?.[0] === "/")
 const pageLinkTitle = computed(
   () => blockProps.blockMap?.[decoratorValue.value as string]?.value?.properties?.title?.[0]?.[0] || "link"
@@ -56,6 +58,10 @@ export default {
   >
     {{ pageLinkTitle }}
   </component>
+  <div
+    v-else-if="isFileMedia" class="notion-link">
+    <img :src="`${decoratorValue}`"/>
+  </div>
   <span v-else-if="decoratorKey === 'd'" v-if="decoratorValue">
     <div>{{ dateFormated(decoratorValue.start_date) }}</div>
     <div v-if="decoratorValue.end_date"> → {{ dateFormated(decoratorValue.end_date) }}</div>

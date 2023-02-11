@@ -761,8 +761,11 @@ svg.notion-page-icon {
 }
 
 .notion-underline {
-  text-underline-offset: 6px;
-  text-decoration-thickness: 1px;
+  color: inherit;
+  word-break: break-word;
+  text-decoration: inherit;
+  border-bottom: 0.05em solid;
+  border-color: var(--fg-color-2);
 }
 
 .notion-list {
@@ -2579,7 +2582,11 @@ pre[class*="language-"] {
 }
 
 .notion-database-table-data.header{
-  color:rgb(55,53,46)
+  color:rgb(55,53,46) !important;
+}
+
+.notion-database-table-data.header u,a{
+  opacity: 1 !important;
 }
 .notion-database-table-cell{
   display: flex;
@@ -2628,6 +2635,10 @@ pre[class*="language-"] {
 
 .checkbox-true{
   background-color: var(--select-color-checkbox);
+}
+
+.checkbox-false{
+  border: solid 1.5px var(--select)
 }
 
 .checkbox-true svg{

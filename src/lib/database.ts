@@ -66,6 +66,9 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
     const getContent = (cellContent:ColumnSchemaType,data:tableValueProperties) => {
         switch(cellContent.type){
             case 'title':
+            case 'number':
+            case 'checkbox':
+            case 'url':
                 return TableMap.value.value[data.id][cellContent.name]
             case 'date':
                 if(TableMap.value.value[data.id][cellContent.name]?.[0][1])
@@ -74,32 +77,26 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             case 'created_by':
                 return
             case 'status':
-                return [TableMap.value.value[data.id][cellContent.name] ?? [[' ']]]
             case 'select':
-                return [TableMap.value.value[data.id][cellContent.name]]
+                return [TableMap.value.value[data.id][cellContent.name] ?? [[' ']]]
             case 'last_edited_by':
                 return
             case 'person':
                 return
-            case 'url':
-                return
-            case 'phone_number':
-                return
+            // case 'phone_number':
+                // return
             case 'multi_select':
                 return (TableMap.value.value[data.id][cellContent.name][0][0] as string).split(',').map(e => [[e]])
+            case 'phone_number':
             case 'email':
-                return
-            case 'file':
-                return
+                return [[TableMap.value.value[data.id][cellContent.name]?.[0][0],['_']]]
+            case 'file': //파일과 미디어
+                return [['file‣',TableMap.value.value[data.id][cellContent.name]?.[0][1]]]
             case 'relation':
                 return
             case 'create_time':
                 return
             case 'last_edited_time':
-                return
-            case 'number':
-                return TableMap.value.value[data.id][cellContent.name]
-            case 'checkbox':
                 return
             case 'formula':
                 return

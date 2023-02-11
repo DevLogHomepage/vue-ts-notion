@@ -26,23 +26,17 @@ const type = (t:string | string[]) => {
     return props.schemaData!.type === t
 }
 
-// const isTrue = computed(() => {return getText.value[0][0] === 'Yes'})
+const isTrue = computed(() => {
+    const value = getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)
+    console.log(value)
+    return value?.[0][0] === 'Yes'
+})
 
 const options = (a:DecorationType) => {
     if(!props.data) return ""
     for(let i of props.schemaData?.options as SchemaSelectOption[]){
         if(i.value === a[0][0])
             return i.color ?? 'default'
-    }
-    return ""
-}
-
-const groups = (a:DecorationType) => {
-    if(!props.data) return ''
-    for(let i of props.schemaData?.groups as SchemaSelectGroup[]){
-        console.log(a[0][0],i.name)
-        if(i.name === a[0][0])
-            return i.color
     }
     return ""
 }
@@ -80,12 +74,12 @@ export default defineComponent({
                     <NotionTextRenderer v-bind="pass" :text="e"/>
                 </div>
             </div>
-            <div v-else-if="type('date')">
+            <div v-else-if="type(['date','file','url','email','phone_number'])">
                 <NotionTextRenderer v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             </div>
+            <CheckBoxIcon v-else-if="type('checkbox')" v-bind="pass" :is-on="isTrue"/>
             <!-- <NotionTextRenderer v-if="!data" v-bind="pass" :text="getText"/>
             <NotionTextRenderer v-else-if="type(['date','status','select','number','phone_number','multi_select','email'])" v-bind="pass" :text="getText"/>
-            <CheckBoxIcon v-else-if="type('checkbox')" :class="{'checkbox-true':isTrue}"/>
             <div></div>
             <div></div> -->
         </div>
