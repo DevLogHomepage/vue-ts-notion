@@ -60,8 +60,59 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         targetDataId.forEach(e => {
             console.log(TableMap.value.value[e as string])
         })
-    
-        // return returnValue
+        switch(cellSchema.aggregation){
+            case "show_unique":
+                return 'show_unique'
+            case "count":
+                return 'count'
+            case "count_values":
+                return 'count_values'
+            case 'unique':
+                return 'unique'
+            case 'empty':
+                return 'empty'
+            case 'not_empty':
+                return 'not_empty'
+            case 'percent_empty':
+                return 'percent_empty'
+            case 'percent_not_empty':
+                return 'percent_not_empty'
+            case 'earliest_date':
+                return 'earliest_date'
+            case 'latest_date':
+                return 'latest_date'
+            case 'date_range':
+                return 'date_range'
+            case 'sum':
+                return 'sum'
+            case 'average':
+                return 'average'
+            case 'median':
+                return 'median'
+            case 'min':
+                return 'min'
+            case 'max':
+                return 'max'
+            case 'range':
+                return 'range'
+            case 'checked':
+                return 'checked'
+            case 'unchecked':
+                return 'unchecked'
+            case 'percent_checked':
+                return 'percent_checked'
+            case 'percent_unchecked':
+                return 'percent_unchecked'
+            default:
+                switch(cellSchema.aggregation.operator){
+                    case 'percent_per_group':
+                        return 'percent_per_group'
+                    case 'count_per_group':
+                        return 'count_per_group'
+                    default:
+                        return 'NONE'
+                }
+        }
     }
     const getContent = (cellContent:ColumnSchemaType,data:tableValueProperties) => {
         switch(cellContent.type){
