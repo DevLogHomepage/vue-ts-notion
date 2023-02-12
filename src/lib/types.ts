@@ -149,6 +149,7 @@ export type ColumnSchemaType = {
   formula:Formula
   relation_property:string
   target_property:string
+  property:string
   aggregation:string
   collection_id:string
   options:SchemaSelectOption[]

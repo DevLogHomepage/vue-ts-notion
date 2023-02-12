@@ -1,5 +1,5 @@
 import { computed, PropType, ref } from "vue";
-import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, BaseDecorationType, tableValueProperties, BlockValue } from "./types";
+import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, tableValueProperties, BlockValue, Properties } from "./types";
 import type { Static } from "vue";
 import { useNotionBlock } from "./blockable";
 
@@ -12,6 +12,7 @@ type FormulaBaseType=
     | Date 
 
 type tableMapType = {[nameId:string]:any}
+type relationMapType = {[nameId:string]:string}
 
 export const defineDatabaseProps = {
     collectionData:{type: Object as PropType<BlockValue>},
@@ -20,9 +21,11 @@ export const defineDatabaseProps = {
 
 class TableMap{
     static value = ref<tableMapType>({} as tableMapType)
+    static relation = ref<relationMapType>({} as relationMapType)
 }
 export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabaseProps>) => {
     
+
     const setDBTable = (databaseId:string,dataId:string,data:any) => {
         if(!data) return 
         if(!TableMap.value.value[dataId] == undefined)
@@ -31,7 +34,14 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         TableMap.value.value[dataId] = data
         TableMap.value.value[dataId]['parent_id_title'] = databaseId
     }
-    
+    const setRelationTable = (schemaValue : {[key: string]: ColumnSchemaType;}) => {
+        console.log('set')
+        Object.entries(schemaValue).forEach(([key,value]) => {
+            if(value.type === 'relation')
+                TableMap.relation.value[key] = props.contentId ?? ''
+        })
+    }
+
     const getDBTable = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
         if(!data) return [[cellSchema.name]]
         return getContent(cellSchema,data)
@@ -53,30 +63,34 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
     const rollup = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
         const relationId = schema.value[cellSchema.relation_property.replace('//','/')].collection_id
         const relationName = schema.value[cellSchema.relation_property.replace('//','/')].name
+        const relationProperty = schema.value[cellSchema.relation_property.replace('//','/')].property
         
         const targetProperty = cellSchema.target_property
-        console.debug('[rollup]',relationId,relationName,targetProperty)
+        const targetSchemaName = props.blockMap[TableMap.relation.value[relationProperty]].collection.schema[targetProperty].name
         const targetDataId = data[relationName].filter(e => e?.[1]?.[0][1] != undefined).map(e => e?.[1]?.[0][1])
-        targetDataId.forEach(e => {
-            console.log(TableMap.value.value[e as string])
-        })
+        
+        console.debug('[rollup]',relationId,relationName,targetProperty)
+
+        const empty = targetDataId.filter(e => TableMap.value.value[e as string][targetSchemaName] === undefined).length
+        const not_empty = targetDataId.filter(e => TableMap.value.value[e as string][targetSchemaName] !== undefined).length
+        const allValue = targetDataId.map(e => TableMap.value.value[e as string][targetSchemaName]?.[0][0]).filter(e => e !== undefined)
         switch(cellSchema.aggregation){
             case "show_unique":
-                return 'show_unique'
+                return allValue.filter((value,index,arr) => arr.indexOf(value) === index)
             case "count":
-                return 'count'
+                return targetDataId.length
             case "count_values":
-                return 'count_values'
+                return targetDataId.length
             case 'unique':
-                return 'unique'
+                return allValue.filter((value,index,arr) => arr.indexOf(value) === index).length
             case 'empty':
-                return 'empty'
+                return empty
             case 'not_empty':
-                return 'not_empty'
+                return not_empty
             case 'percent_empty':
-                return 'percent_empty'
+                return empty / targetDataId.length * 100
             case 'percent_not_empty':
-                return 'percent_not_empty'
+                return not_empty / targetDataId.length * 100
             case 'earliest_date':
                 return 'earliest_date'
             case 'latest_date':
@@ -84,25 +98,25 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             case 'date_range':
                 return 'date_range'
             case 'sum':
-                return 'sum'
+                return allValue.reduce((x,y) => x + y)
             case 'average':
-                return 'average'
+                return allValue.reduce((x,y) => x + y) / not_empty
             case 'median':
                 return 'median'
             case 'min':
-                return 'min'
+                return Math.min(...allValue)
             case 'max':
-                return 'max'
+                return Math.max(...allValue)
             case 'range':
                 return 'range'
             case 'checked':
-                return 'checked'
+                return allValue.filter(e => e === "Yes").length
             case 'unchecked':
-                return 'unchecked'
+                return allValue.filter(e => e === "No").length
             case 'percent_checked':
-                return 'percent_checked'
+                return allValue.filter(e => e === "Yes").length / allValue.length * 100
             case 'percent_unchecked':
-                return 'percent_unchecked'
+                return allValue.filter(e => e === "No").length / allValue.length * 100
             default:
                 switch(cellSchema.aggregation.operator){
                     case 'percent_per_group':
@@ -169,7 +183,8 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         rollup,
         getContent,
         setDBTable,
-        getDBTable
+        getDBTable,
+        setRelationTable
     }
 }
 
@@ -258,6 +273,21 @@ export const useFormula = (props: Readonly<NotionBlockProps & NotionDatabaseProp
                 return smallerEq(type.args as FormulaBaseType[])
         }
     }
+
+    function median(values:number[]){
+        if(values.length ===0) throw new Error("No inputs");
+      
+        values.sort(function(a,b){
+          return a-b;
+        });
+      
+        var half = Math.floor(values.length / 2);
+        
+        if (values.length % 2)
+          return values[half];
+        
+        return (values[half - 1] + values[half]) / 2.0;
+      }
 
     const function_ = (type:Formula) => {
         switch(type.name){

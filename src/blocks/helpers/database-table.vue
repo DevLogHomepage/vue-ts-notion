@@ -8,9 +8,9 @@ import NotionDBTableCell from '@/blocks/helpers/database-table-cell.vue'
 const props = defineProps({...defineDatabaseProps, ...defineNotionProps })
 
 //@ts-ignore
-const { pass,parent } = useNotionBlock(props)
+const { pass,parent,properties:blockProperties } = useNotionBlock(props)
 //@ts-ignore
-const { schema,data,properties,setDBTable } = useDatabase(props)
+const { schema,data,properties,setDBTable,setRelationTable } = useDatabase(props)
 
 const isVisible = (columnId:TableBlockProperties) => columnId.visible
 
@@ -18,6 +18,8 @@ onBeforeMount(() => {
     data.value.forEach((d,i) => {
         setDBTable(parent.value.value.id,d.id,d)
     })
+    console.log(blockProperties.value)
+    setRelationTable(schema.value)
 })
 
 </script>
