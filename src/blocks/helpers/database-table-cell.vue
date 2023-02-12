@@ -28,7 +28,6 @@ const type = (t:string | string[]) => {
 
 const isTrue = computed(() => {
     const value = getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)
-    console.log(value)
     return value?.[0][0] === 'Yes'
 })
 

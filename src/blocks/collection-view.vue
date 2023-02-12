@@ -13,7 +13,7 @@ const { block,title, pass, blockColorClass } = useNotionBlock(props)
 
 const typesNumber = ref(0)
 
-const header = (columnType:BlockValue) => [[columnType?.name == '' ? columnType.type : columnType.name]] as DecorationType[]
+const header = (columnType:BlockValue) => [[(columnType?.name == '' || columnType?.name == undefined) ? columnType.type : columnType.name]] as DecorationType[]
 const setDisplayTable = (_:MouseEvent,index:number) => {typesNumber.value  = index}
 const underLine = (index:number) => (typesNumber.value === index) ? {borderBottom: 'solid 2px rgb(55,53,47)',paddingTop:'2px',color: 'rgba(55,53,47,1)'} : ''
 

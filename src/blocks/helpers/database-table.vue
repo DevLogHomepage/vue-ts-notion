@@ -18,7 +18,6 @@ onBeforeMount(() => {
     data.value.forEach((d,i) => {
         setDBTable(parent.value.value.id,d.id,d)
     })
-    console.log(blockProperties.value)
     setRelationTable(schema.value)
 })
 

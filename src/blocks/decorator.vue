@@ -37,7 +37,6 @@ const target = computed(() => {
 })
 
 const dateFormated = (date:string) => {
-  console.log('format',moment(date).format(text.value as string),text.value)
   if(!date) return ''
   return moment(date).format(text.value as string)
 }

@@ -36,7 +36,6 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
     }
 
     const setRelationTable = (schemaValue : {[key: string]: ColumnSchemaType;}) => {
-        console.log('set')
         Object.entries(schemaValue).forEach(([key,value]) => {
             if(value.type === 'relation')
                 TableMap.relation.value[key] = props.contentId ?? ''
