@@ -104,6 +104,9 @@ export default {
   <u v-else-if="decoratorKey === '_'" class="notion-underline">
     <NotionDecorator :content="nextContent" v-bind="pass" />
   </u>
+  <a v-else-if="decoratorKey === '%'">
+    <NotionDecorator :content="nextContent" v-bind="pass" />%
+  </a>
   <NotionKatek v-else-if="decoratorKey === 'e' && blockProps.katex" :expression="(decoratorValue as string)" />
   <code v-else-if="decoratorKey === 'e'" class="notion-inline-code">
     {{ decoratorValue }}

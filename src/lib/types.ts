@@ -7,6 +7,7 @@ export type CodeFormatType = ["c"];
 export type KatexFormatType = ["e"];
 export type unKnownFormatType = ["h"]; //TODO: need to change this type name
 export type UnderLineFormatType = ["_"]; //TODO: need to change this type name
+export type PercentFormatType = ["%"]; //TODO: need to change this type name
 export type LinkFormatType = ["a", string];
 export type DateFormatType = [
   "d",
@@ -32,6 +33,7 @@ export type SubDecorationType =
   | KatexFormatType
   | unKnownFormatType
   | PageFormatType
+  | PercentFormatType
 
 export type BaseDecorationType = [string]
 

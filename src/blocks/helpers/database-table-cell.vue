@@ -79,7 +79,7 @@ export default defineComponent({
             </div>
             <CheckBoxIcon v-else-if="type('checkbox')" v-bind="pass" :is-on="isTrue"/>
             <div v-else-if="type('rollup')">
-                {{ getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }}
+                <NotionTextRenderer v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             </div>
             <!-- <NotionTextRenderer v-if="!data" v-bind="pass" :text="getText"/>
             <NotionTextRenderer v-else-if="type(['date','status','select','number','phone_number','multi_select','email'])" v-bind="pass" :text="getText"/>

@@ -34,6 +34,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         TableMap.value.value[dataId] = data
         TableMap.value.value[dataId]['parent_id_title'] = databaseId
     }
+
     const setRelationTable = (schemaValue : {[key: string]: ColumnSchemaType;}) => {
         console.log('set')
         Object.entries(schemaValue).forEach(([key,value]) => {
@@ -44,6 +45,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
 
     const getDBTable = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
         if(!data) return [[cellSchema.name]]
+        // if(!TableMap.value.value[data.id][cellSchema.name])
         return getContent(cellSchema,data)
     }
     
@@ -60,6 +62,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         return props.collectionData!.type === t
     }
 
+
     const rollup = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
         const relationId = schema.value[cellSchema.relation_property.replace('//','/')].collection_id
         const relationName = schema.value[cellSchema.relation_property.replace('//','/')].name
@@ -74,57 +77,68 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         const empty = targetDataId.filter(e => TableMap.value.value[e as string][targetSchemaName] === undefined).length
         const not_empty = targetDataId.filter(e => TableMap.value.value[e as string][targetSchemaName] !== undefined).length
         const allValue = targetDataId.map(e => TableMap.value.value[e as string][targetSchemaName]?.[0][0]).filter(e => e !== undefined)
+        const allDateValue = targetDataId.map(e => TableMap.value.value[e as string][targetSchemaName]?.[0][1]).filter(e => e !== undefined)
+
+        const allDates = allDateValue.map(e => e?.[0][1].start_date).concat(allDateValue.map(e => e?.[0][1].end_date))
+        
+        const addDB = (value:any) => {
+            TableMap.value.value[data.id][cellSchema.name] = value
+            return value
+        }
         switch(cellSchema.aggregation){
             case "show_unique":
-                return allValue.filter((value,index,arr) => arr.indexOf(value) === index)
+                return addDB(allValue.filter((value,index,arr) => arr.indexOf(value) === index).map(e => [e]))
             case "count":
-                return targetDataId.length
+                return addDB([[targetDataId.length]])
             case "count_values":
-                return targetDataId.length
+                return addDB([[targetDataId.length]])
             case 'unique':
-                return allValue.filter((value,index,arr) => arr.indexOf(value) === index).length
+                return addDB([[allValue.filter((value,index,arr) => arr.indexOf(value) === index).length]])
             case 'empty':
-                return empty
+                return addDB([[empty]])
             case 'not_empty':
-                return not_empty
+                return addDB([[not_empty]])
             case 'percent_empty':
-                return empty / targetDataId.length * 100
+                return addDB([[empty / targetDataId.length * 100,['%']]])
             case 'percent_not_empty':
-                return not_empty / targetDataId.length * 100
+                return addDB([[not_empty / targetDataId.length * 100,['%']]])
             case 'earliest_date':
-                return 'earliest_date'
+                return addDB([['ll',[['d',{start_date:Math.min(...allDates.map(e => new Date(e as string).getTime()))}]]]])
             case 'latest_date':
-                return 'latest_date'
-            case 'date_range':
-                return 'date_range'
+                return addDB([['ll',[['d',{start_date:Math.max(...allDates.map(e => new Date(e as string).getTime()))}]]]])
+            case 'date_range': // need to make this unit to days years minutes
+                return addDB([[
+                    (Math.max(...allDates.map(e => new Date(e as string).getTime())) - 
+                    Math.min(...allDates.map(e => new Date(e as string).getTime()))) / (60 * 60 * 24 * 1000)]]
+                )
             case 'sum':
-                return allValue.reduce((x,y) => x + y)
+                return addDB([[allValue.reduce((x,y) => x + y)]])
             case 'average':
-                return allValue.reduce((x,y) => x + y) / not_empty
+                return addDB([[allValue.reduce((x,y) => x + y) / not_empty]])
             case 'median':
-                return 'median'
+                return [['median']]
             case 'min':
-                return Math.min(...allValue)
+                return addDB([[Math.min(...allValue)]])
             case 'max':
-                return Math.max(...allValue)
+                return addDB([[Math.max(...allValue)]])
             case 'range':
-                return 'range'
+                return addDB([[Math.max(...allValue) - Math.min(...allValue)]])
             case 'checked':
-                return allValue.filter(e => e === "Yes").length
+                return addDB([[allValue.filter(e => e === 'Yes').length]])
             case 'unchecked':
-                return allValue.filter(e => e === "No").length
+                return addDB([[allValue.filter(e => e === 'No').length]])
             case 'percent_checked':
-                return allValue.filter(e => e === "Yes").length / allValue.length * 100
+                return addDB([[allValue.filter(e => e === 'Yes').length / allValue.length * 100,['%']]])
             case 'percent_unchecked':
-                return allValue.filter(e => e === "No").length / allValue.length * 100
+                return addDB([[allValue.filter(e => e === "No").length / allValue.length * 100,['%']]])
             default:
                 switch(cellSchema.aggregation.operator){
                     case 'percent_per_group':
-                        return 'percent_per_group'
+                        return [['percent_per_group']]
                     case 'count_per_group':
-                        return 'count_per_group'
+                        return [['count_per_group']]
                     default:
-                        return 'NONE'
+                        return [['NONE']]
                 }
         }
     }
@@ -148,8 +162,6 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                 return
             case 'person':
                 return
-            // case 'phone_number':
-                // return
             case 'multi_select':
                 return (TableMap.value.value[data.id][cellContent.name][0][0] as string).split(',').map(e => [[e]])
             case 'phone_number':
