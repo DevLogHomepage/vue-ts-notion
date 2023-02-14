@@ -66,7 +66,6 @@ export default defineComponent({
                 <NotionTextRenderer v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" />
             </div>
             <div v-else-if="type('status')">
-                <!-- {{ getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }} -->
                 <div v-for="e in getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" 
                 :style="{backgroundColor:`var(--notion-select-${options((e as DecorationType))})`}" 
                 class="database-selectbox">
@@ -80,6 +79,11 @@ export default defineComponent({
             <div v-else-if="type('rollup')">
                 <NotionTextRenderer v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             </div>
+            <div v-else-if="type('formula')">
+                {{ getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }}
+            </div>
+                            <!-- {{ getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }} -->
+                <!-- <NotionTextRenderer v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/> -->
             <!-- <NotionTextRenderer v-if="!data" v-bind="pass" :text="getText"/>
             <NotionTextRenderer v-else-if="type(['date','status','select','number','phone_number','multi_select','email'])" v-bind="pass" :text="getText"/>
             <div></div>

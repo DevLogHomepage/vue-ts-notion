@@ -152,11 +152,15 @@ export type ColumnSchemaType = {
   relation_property:string
   target_property:string
   property:string
-  aggregation:string
+  aggregation:string| {
+    operator: string
+    groupName: string
+  }
   collection_id:string
   options:SchemaSelectOption[]
   groups:SchemaSelectGroup[]
   date_format:string
+  defaultOption:string
 };
 
 export type SchemaSelectOption =   {

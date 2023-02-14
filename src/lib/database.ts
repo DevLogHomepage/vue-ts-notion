@@ -19,6 +19,7 @@ export const defineDatabaseProps = {
     tableMap:{type:Object as PropType<tableMapType>}
 }
 
+let count = 0
 class TableMap{
     static value = ref<tableMapType>({} as tableMapType)
     static relation = ref<relationMapType>({} as relationMapType)
@@ -68,22 +69,40 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         const relationProperty = schema.value[cellSchema.relation_property.replace('//','/')].property
         
         const targetProperty = cellSchema.target_property
-        const targetSchemaName = props.blockMap[TableMap.relation.value[relationProperty]].collection.schema[targetProperty].name
-        const targetDataId = data[relationName].filter(e => e?.[1]?.[0][1] != undefined).map(e => e?.[1]?.[0][1])
+        const targetSchema = props.blockMap[TableMap.relation.value[relationProperty]].collection.schema[targetProperty]
+        const targetSchemaName = targetSchema.name
+        const targetDataId = data[relationName]?.filter(e => e?.[1]?.[0][1] != undefined).map(e => e?.[1]?.[0][1])
         
         console.debug('[rollup]',relationId,relationName,targetProperty)
 
-        const empty = targetDataId.filter(e => TableMap.value.value[e as string][targetSchemaName] === undefined).length
-        const not_empty = targetDataId.filter(e => TableMap.value.value[e as string][targetSchemaName] !== undefined).length
-        const allValue = targetDataId.map(e => TableMap.value.value[e as string][targetSchemaName]?.[0][0]).filter(e => e !== undefined)
-        const allDateValue = targetDataId.map(e => TableMap.value.value[e as string][targetSchemaName]?.[0][1]).filter(e => e !== undefined)
+        const empty = targetDataId?.filter(e => TableMap.value.value[e as string][targetSchemaName] === undefined).length
+        const not_empty = targetDataId?.filter(e => TableMap.value.value[e as string][targetSchemaName] !== undefined).length
+        const allValue = targetDataId?.map(e => TableMap.value.value[e as string][targetSchemaName]?.[0][0]).filter(e => e !== undefined)
+        const allDateValue = targetDataId?.map(e => TableMap.value.value[e as string][targetSchemaName]?.[0][1]).filter(e => e !== undefined)
 
-        const allDates = allDateValue.map(e => e?.[0][1].start_date).concat(allDateValue.map(e => e?.[0][1].end_date))
+        const allDates = allDateValue?.map(e => e?.[0][1].start_date).concat(allDateValue.map(e => e?.[0][1].end_date))
         
         const addDB = (value:any) => {
             TableMap.value.value[data.id][cellSchema.name] = value
             return value
         }
+
+
+        function median(values:number[]){
+            if(values.length ===0) throw new Error("No inputs");
+        
+            values.sort(function(a,b){
+            return a-b;
+            });
+        
+            var half = Math.floor(values.length / 2);
+            
+            if (values.length % 2)
+            return values[half];
+            
+            return (values[half - 1] + values[half]) / 2.0;
+        }
+
         switch(cellSchema.aggregation){
             case "show_unique":
                 return addDB(allValue.filter((value,index,arr) => arr.indexOf(value) === index).map(e => [e]))
@@ -115,7 +134,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             case 'average':
                 return addDB([[allValue.reduce((x,y) => x + y) / not_empty]])
             case 'median':
-                return [['median']]
+                return addDB([[median(allValue)]])
             case 'min':
                 return addDB([[Math.min(...allValue)]])
             case 'max':
@@ -127,15 +146,20 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             case 'unchecked':
                 return addDB([[allValue.filter(e => e === 'No').length]])
             case 'percent_checked':
-                return addDB([[allValue.filter(e => e === 'Yes').length / allValue.length * 100,['%']]])
+                const trueValue = allValue.filter(e => e === 'Yes').length
+                return addDB([[trueValue ? (trueValue / allValue.length * 100).toFixed(1) : 0,['%']]])
             case 'percent_unchecked':
-                return addDB([[allValue.filter(e => e === "No").length / allValue.length * 100,['%']]])
+                const falseValue = allValue.filter(e => e === "No").length
+                return addDB([[falseValue ? (falseValue / allValue.length * 100).toFixed(1) : 0,['%']]])
             default:
-                switch(cellSchema.aggregation.operator){
+                const groupId = targetSchema.groups?.find(e => e.name === cellSchema.aggregation.groupName).optionIds[0]
+                const optionId =  targetSchema.options?.find(e => e.id === groupId)
+                const groupCount = allValue?.filter(e =>  ((e === undefined || e === '') ? targetSchema.defaultOption : e) === optionId?.value)
+                switch(cellSchema.aggregation?.operator){
                     case 'percent_per_group':
-                        return [['percent_per_group']]
+                        return [[groupCount.length ? (groupCount.length /allValue.length * 100).toFixed(1) : 0,['%']]]
                     case 'count_per_group':
-                        return [['count_per_group']]
+                        return [[`${groupCount.length} / ${allValue.length}`]]
                     default:
                         return [['NONE']]
                 }
@@ -156,13 +180,14 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                 return
             case 'status':
             case 'select':
-                return [TableMap.value.value[data.id][cellContent.name] ?? [[' ']]]
+                const tempValue = TableMap.value.value[data.id][cellContent.name]
+                return [(tempValue?.[0][0] == '' ||tempValue?.[0][0] == undefined) ? [[cellContent.defaultOption ?? '']] : tempValue]
             case 'last_edited_by':
                 return
-            case 'person':
+            case 'person': //api not supported
                 return
             case 'multi_select':
-                return (TableMap.value.value[data.id][cellContent.name][0][0] as string).split(',').map(e => [[e]])
+                return (TableMap.value.value[data.id][cellContent.name]?.[0][0] as string)?.split(',').map(e => [[e]])
             case 'phone_number':
             case 'email':
                 return [[TableMap.value.value[data.id][cellContent.name]?.[0][0],['_']]]
@@ -175,7 +200,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             case 'last_edited_time':
                 return
             case 'formula':
-                return
+                return getFormula(cellContent.formula,data)
             case 'rollup':
                 return rollup(cellContent,data)
         }
@@ -199,35 +224,17 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
     }
 }
 
+export const getFormula  = (cellFormula:Formula,data:tableValueProperties) => {
+    const testing = formula(cellFormula,data)
+    console.log('result',testing)
+    return testing
+}
 
+export const formula = (cellFormula:Formula,data:tableValueProperties) => {
+    let testing = [] as FormulaBaseType[]
 
-export const useFormula = (props: Readonly<NotionBlockProps & NotionDatabaseProps>) => {
-    const {schema,type} = useDatabase(props)
-
-
-    // const getContent = (type:Formula) => {
-    //     if(type.args){
-    //         (type.args as Formula[])?.forEach(e => {
-    //             getContent(e)
-    //         })
-    //     }
-
-    //     switch(type.type){
-    //         case 'constant':
-    //             return constant(type)
-    //         case 'function':
-    //             return function_(type)
-    //         case 'operator':
-    //             return operator(type)
-    //         case 'conditional':
-    //             return 
-    //         case 'property':
-    //             return property(type)
-    //     }     
-    // }
-
-    const property = (type:Formula) => {
-        schema.value[type.id as string]
+    const property = (cellFormula:Formula) => {
+        return data[cellFormula.name as string]?.[0][0]
     }
 
     const constant = (type:Formula) => {
@@ -241,111 +248,90 @@ export const useFormula = (props: Readonly<NotionBlockProps & NotionDatabaseProp
             case "false":
                 return false;
         }
+        console.log('constant',type.value)
         return type.value
     }
 
-    const operator = (type:Formula) => {
+
+    const operator = (type:Formula,data:FormulaBaseType[]) => {
         switch(type.name){
             case 'if':
-                return if_(type.args as FormulaBaseType[])
+                return if_(data as FormulaBaseType[])
             case 'add':
-                return add(type.args as number[])
+                return add(data as number[])
             case 'substract':
-                return substract(type.args as number[])
+                return substract(data as number[])
             case 'multiply':
-                return multiply(type.args as number[])
+                return multiply(data as number[])
             case 'divide':
-                return divide(type.args as number[])
+                return divide(data as number[])
             case 'pow':
-                return pow(type.args as number[])
+                return pow(data as number[])
             case 'mod':
-                return mod(type.args as number[])
+                return mod(data as number[])
             case 'unaryMinus':
-                return unaryMinus(type.args as number[])
+                return unaryMinus(data as number[])
             case 'unaryPlus':
-                return unaryPlus(type.args as number[])
+                return unaryPlus(data as number[])
             case 'not':
-                return not(type.args as boolean[])
+                return not(data as boolean[])
             case 'and':
-                return and(type.args as boolean[])
+                return and(data as boolean[])
             case 'or':
-                return or(type.args as boolean[])
+                return or(data as boolean[])
             case 'equal':
-                return equal(type.args as boolean[])
+                return equal(data as boolean[])
             case 'unequal':
-                return unequal(type.args as boolean[])
-            case 'larger':
-                return larger(type.args as FormulaBaseType[])
-            case 'largerEq':
-                return largerEq(type.args as FormulaBaseType[])
-            case 'smaller':
-                return smaller(type.args as FormulaBaseType[])
-            case 'smallerEq':
-                return smallerEq(type.args as FormulaBaseType[])
+                return unequal(data as boolean[])
         }
     }
 
-    function median(values:number[]){
-        if(values.length ===0) throw new Error("No inputs");
-      
-        values.sort(function(a,b){
-          return a-b;
-        });
-      
-        var half = Math.floor(values.length / 2);
-        
-        if (values.length % 2)
-          return values[half];
-        
-        return (values[half - 1] + values[half]) / 2.0;
-      }
-
-    const function_ = (type:Formula) => {
+    const function_ = (type:Formula,data:FormulaBaseType[]) => {
         switch(type.name){
             case 'concat':
-                return concat(type.args as string[])
+                return concat(data as string[])
             case 'join':
-                return join(type.args as string[])
+                return join(data as string[])
             case 'slice':
-                return slice(type.args as FormulaBaseType[])
+                return slice(data as FormulaBaseType[])
             case 'length':
-                return length_(type.args as string[])
+                return length_(data as string[])
             case 'format':
-                return format_(type.args as FormulaBaseType[])
+                return format_(data as FormulaBaseType[])
             case 'toNumber':
-                return toNum(type.args as number[])
+                return toNum(data as number[])
             case 'contains':
-                return contains(type.args as string[])
+                return contains(data as string[])
             case 'replace':
-                return replace(type.args as FormulaBaseType[])
+                return replace(data as FormulaBaseType[])
             case 'replaceAll':
-                return replaceAll(type.args as FormulaBaseType[])
+                return replaceAll(data as FormulaBaseType[])
             case 'test':
-                return test(type.args as FormulaBaseType[])
+                return test(data as FormulaBaseType[])
             case 'empty':
-                return empty(type.args as FormulaBaseType[])
+                return empty(data as FormulaBaseType[])
             case 'abs':
-                return abs(type.args as number[])
+                return abs(data as number[])
             case 'cbrt':
-                return cbrt(type.args as number[])
+                return cbrt(data as number[])
             case 'ceil':
-                return ceil(type.args as number[])
+                return ceil(data as number[])
             case 'exp':
-                return ceil(type.args as number[])
+                return ceil(data as number[])
             case 'floor':
-                return floor(type.args as number[])
+                return floor(data as number[])
             case 'ln':
-                return ln(type.args as number[])
+                return ln(data as number[])
             case 'log10':
-                return log10(type.args as number[])
+                return log10(data as number[])
             case 'log2':
-                return log2(type.args as number[])
+                return log2(data as number[])
             case 'max':
-                return max(type.args as number[])
+                return max(data as number[])
             case 'min':
-                return min(type.args as number[])
+                return min(data as number[])
             case 'sqrt':
-                return sqrt(type.args as number[])
+                return sqrt(data as number[])
             case 'start':
                 return ''
             case 'end':
@@ -376,6 +362,14 @@ export const useFormula = (props: Readonly<NotionBlockProps & NotionDatabaseProp
                 return ''
             case 'id':
                 return ''
+            case 'larger':
+                return larger(data as FormulaBaseType[])
+            case 'largerEq':
+                return largerEq(data as FormulaBaseType[])
+            case 'smaller':
+                return smaller(data as FormulaBaseType[])
+            case 'smallerEq':
+                return smallerEq(data as FormulaBaseType[])
         }     
     }
 
@@ -402,7 +396,10 @@ export const useFormula = (props: Readonly<NotionBlockProps & NotionDatabaseProp
     const join =([arg1,...args]:string[]) => args.join(arg1)
     const slice = ([arg1,arg2,arg3]:FormulaBaseType[]) => (arg1 as string).slice(arg2 as number,arg3 as number) 
     const length_ = ([arg1]:string[]) => arg1.length 
-    const format_ = ([arg1]:FormulaBaseType[]) => `${arg1}` 
+    const format_ = ([arg1]:FormulaBaseType[]) => {
+        console.log('format',arg1)
+        return  `${arg1}` 
+    }
     const toNum = ([arg1]:(number)[]) => +arg1 
     const contains = ([arg1,arg2]:string[]) => arg1.indexOf(arg2) > 0 
     const replace = ([arg1,arg2,arg3]:FormulaBaseType[]) => format_([arg1]).replace(arg2 as string,arg3 as string) 
@@ -423,8 +420,28 @@ export const useFormula = (props: Readonly<NotionBlockProps & NotionDatabaseProp
     const sqrt = ([arg1]:number[]) => Math.sqrt(arg1) 
     const round = ([arg1]:number[]) => Math.round(arg1) 
 
-    return {
-        operator,
-        function_,
+    if(cellFormula?.args){
+        testing = cellFormula.args.map((e,i) => formula(e as Formula,data) as FormulaBaseType)
     }
+    console.log('cellFormula',cellFormula,testing)
+
+    switch(cellFormula?.type){
+        case 'constant':
+            return constant(cellFormula)
+        case 'function':
+            return function_(cellFormula,testing)
+        case 'operator':
+            return operator(cellFormula,testing)
+        case 'conditional':
+            break;
+        case 'property':
+            return property(cellFormula)
+    }
+}
+
+
+const testing = (cellFormula:Formula,data:tableValueProperties,value:any) => {
+    cellFormula?.args?.map(e => {
+
+    })
 }
