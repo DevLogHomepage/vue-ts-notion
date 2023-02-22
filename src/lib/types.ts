@@ -11,13 +11,14 @@ export type PercentFormatType = ["%"]; //TODO: need to change this type name
 export type LinkFormatType = ["a", string];
 export type DateFormatType = [
   "d",
-  {
-    type: "date"
-    start_date: string
-    end_date: string
-    date_format: string
-  }
+  DateFormat
 ];
+export type DateFormat = {
+  type: "date"
+  start_date: string
+  end_date: string
+  date_format: string
+}
 
 export type UserFormatType = ["u", string];
 export type PageFormatType = ["p", string];
@@ -151,6 +152,7 @@ export type ColumnSchemaType = {
   formula:Formula
   relation_property:string
   target_property:string
+  target_property_type: string
   property:string
   aggregation:string| {
     operator: string
@@ -294,4 +296,7 @@ export interface Formula {
   value: FormulaBaseType,
   operator?: string,
   result_type: string
+  condition:Formula
+  false:Formula
+  true:Formula
 }

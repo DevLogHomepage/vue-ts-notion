@@ -3,11 +3,16 @@
 <script setup lang="ts">
 import { useNotionBlock, defineNotionProps } from "@/lib/blockable"
 import NotionDBTable from '@/blocks/helpers/database-table.vue'
-import { defineDatabaseProps } from "@/lib/database";
+import { useDatabase,defineDatabaseProps } from '@/lib/database'
+import { onBeforeMount, onMounted } from "vue";
 
 const props = defineProps({...defineDatabaseProps, ...defineNotionProps })
 //@ts-ignore
 const { pass } = useNotionBlock(props)
+
+//@ts-ignore
+const { preloadRelation } = useDatabase(props)
+
 
 const isType = (t:string | string[]) => {
   if (Array.isArray(t)) {
@@ -15,6 +20,10 @@ const isType = (t:string | string[]) => {
     }
     return props.collectionData?.type === t
 }
+
+onBeforeMount(() => preloadRelation())
+
+
 </script>
 
 <script lang="ts">

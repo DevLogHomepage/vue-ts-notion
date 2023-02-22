@@ -1,9 +1,5 @@
 import { computed, PropType, ref } from "vue";
-import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, tableValueProperties, BlockValue, Properties } from "./types";
-import type { Static } from "vue";
-import { useNotionBlock } from "./blockable";
-
-import moment from 'moment'
+import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, tableValueProperties, BlockValue } from "./types";
 
 type FormulaBaseType=
     number
@@ -13,42 +9,24 @@ type FormulaBaseType=
 
 type tableMapType = {[nameId:string]:any}
 type relationMapType = {[nameId:string]:string}
+type schemaMapType = {[nameId:string]:string[]}
 
 export const defineDatabaseProps = {
     collectionData:{type: Object as PropType<BlockValue>},
     tableMap:{type:Object as PropType<tableMapType>}
 }
 
-let count = 0
+/**
+ * temporary data store variable for displaying table
+ */
 class TableMap{
     static value = ref<tableMapType>({} as tableMapType)
     static relation = ref<relationMapType>({} as relationMapType)
+    static schema = ref<schemaMapType>({} as schemaMapType)
 }
+
 export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabaseProps>) => {
-    
 
-    const setDBTable = (databaseId:string,dataId:string,data:any) => {
-        if(!data) return 
-        if(!TableMap.value.value[dataId] == undefined)
-        console.debug('[setDBTable]',databaseId,dataId,data)
-        console.debug('[tableMap]:',TableMap.value)
-        TableMap.value.value[dataId] = data
-        TableMap.value.value[dataId]['parent_id_title'] = databaseId
-    }
-
-    const setRelationTable = (schemaValue : {[key: string]: ColumnSchemaType;}) => {
-        Object.entries(schemaValue).forEach(([key,value]) => {
-            if(value.type === 'relation')
-                TableMap.relation.value[key] = props.contentId ?? ''
-        })
-    }
-
-    const getDBTable = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
-        if(!data) return [[cellSchema.name]]
-        // if(!TableMap.value.value[data.id][cellSchema.name])
-        return getContent(cellSchema,data)
-    }
-    
     const collection = computed(() => props.collectionData)
     const format = computed(() => collection.value?.format)
     const properties = computed(() => format?.value.table_properties ?? [])
@@ -56,103 +34,161 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
     const parent = computed(() => props.blockMap![parent_id.value])
     const data = computed(() => parent.value?.collection.data)
     const schema = computed(() => parent.value.collection.schema)
-
-    const type = (t:string | string[]) => {
-        if(Array.isArray(t)) return t.includes(props.collectionData!.type)
-        return props.collectionData!.type === t
+    
+    /**
+     * get specific data in the table row data
+     * 
+     * @param schemaData database table cell's schema data
+     * @param tableData data of the row
+     * @returns `decorationType` extract data from `tableData` using `schemaData`'s data 
+     */
+    const getProps = (schemaData:ColumnSchemaType,tableData:tableValueProperties) => {
+        if(!tableData) return schemaData.name
+        if(!tableData[schemaData.name] || !schemaData) setProps(schemaData,tableData)
+        return tableData[schemaData.name]
     }
 
+    /**
+     * setting props for the database Table variable(TableMap)
+     * 
+     * @param schemaData database table cell's schema data
+     * @param tableData data of the row
+     */
+    const setProps = (schemaData:ColumnSchemaType,tableData:tableValueProperties) => {
+        switch(schemaData.type){
+            case 'rollup':
+                TableMap.value.value[tableData.id][schemaData.name] = rollup(schemaData,tableData)
+                break
+            case 'formula':
+                TableMap.value.value[tableData.id][schemaData.name] =getFormula(schemaData,tableData)
+                break
+            case 'select':
+            case 'multi_select':
+                break
+            case 'relation':
+                break
+            default:
+                console.warn(`${schemaData.type} is NOT SUPPORTED!`)
+        }
+    }
 
+    /**
+     * function that pre load needed information for building tables
+     */
+    const preloadRelation = () => {
+        console.debug('tableMap',TableMap.value.value)
+        console.debug('tableMap',TableMap.relation.value)
+        
+        Object.entries(props.blockMap).forEach(([blockMapKey,value]) =>{
+            if(!value['collection']) return
+            value.collection.data.forEach(data => {
+                if(!TableMap.value.value[data.id]){
+                    TableMap.value.value[data.id] = data
+                    TableMap.value.value[data.id]['parent_id_title'] = blockMapKey
+                }
+            })
+            Object.entries(value.collection.schema).forEach(([key,value]) => {
+                if(value.type === 'relation') TableMap.relation.value[key] = blockMapKey
+                if(!TableMap.schema.value[blockMapKey]) TableMap.schema.value[blockMapKey] = []
+                TableMap.schema.value[blockMapKey].push(key)
+            })
+
+        })
+    }
+
+    /**
+     * custom function that getting medians
+     * 
+     * @param numbers list of number need to get medians
+     * @returns `number`
+     */
+    const median = (numbers:number[]) => {
+        const sorted = numbers.slice().sort((a, b) => a - b);
+        const middle = Math.floor(sorted.length / 2);
+      
+        if (sorted.length % 2 === 0) 
+          return (sorted[middle - 1] + sorted[middle]) / 2;
+        else return sorted[middle];
+    }
+
+    /**
+     * 
+     * @param cellSchema database table cell schema data
+     * @param data data of the row
+     * @returns DecorationType[]
+     */
     const rollup = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
         const relationId = schema.value[cellSchema.relation_property.replace('//','/')].collection_id
         const relationName = schema.value[cellSchema.relation_property.replace('//','/')].name
         const relationProperty = schema.value[cellSchema.relation_property.replace('//','/')].property
-        
         const targetProperty = cellSchema.target_property
-        const targetSchema = props.blockMap[TableMap.relation.value[relationProperty]].collection.schema[targetProperty]
+        const targetSchema = props?.blockMap[TableMap.relation.value[relationProperty]].collection.schema[targetProperty]
         const targetSchemaName = targetSchema.name
-        const targetDataId = data[relationName]?.filter(e => e?.[1]?.[0][1] != undefined).map(e => e?.[1]?.[0][1])
-        
-        console.debug('[rollup]',relationId,relationName,targetProperty)
+
+        const targetData = data[relationName]?.filter(e => ((e?.[1]?.[0][1] != undefined) && TableMap.value.value[e?.[1]?.[0][1] as string]))
+        const targetDataId = targetData?.map(e => e?.[1]?.[0][1])
+        if(!targetDataId || !targetData.length) return [['']]
+        targetDataId?.forEach(e => {
+            if(!TableMap.value.value[e as string]) setProps(targetSchema,data)
+        })
 
         const empty = targetDataId?.filter(e => TableMap.value.value[e as string][targetSchemaName] === undefined).length
         const not_empty = targetDataId?.filter(e => TableMap.value.value[e as string][targetSchemaName] !== undefined).length
-        const allValue = targetDataId?.map(e => TableMap.value.value[e as string][targetSchemaName]?.[0][0]).filter(e => e !== undefined)
-        const allDateValue = targetDataId?.map(e => TableMap.value.value[e as string][targetSchemaName]?.[0][1]).filter(e => e !== undefined)
+        const allTesting = targetDataId?.map(e => getProps(targetSchema,TableMap.value.value[e as string]))
+        const allValue = allTesting?.map(e => e?.[0][0]).filter(e => e !== undefined)
+        const allDateValue = allTesting?.map(e => e?.[0][1]).filter(e => e !== undefined)
 
-        const allDates = allDateValue?.map(e => e?.[0][1].start_date).concat(allDateValue.map(e => e?.[0][1].end_date))
+        const allDates = allDateValue?.map(e => e?.[0]?.[1]?.start_date).concat(allDateValue.map(e => e?.[0]?.[1]?.end_date))
         
-        const addDB = (value:any) => {
-            TableMap.value.value[data.id][cellSchema.name] = value
-            return value
-        }
-
-
-        function median(values:number[]){
-            if(values.length ===0) throw new Error("No inputs");
-        
-            values.sort(function(a,b){
-            return a-b;
-            });
-        
-            var half = Math.floor(values.length / 2);
-            
-            if (values.length % 2)
-            return values[half];
-            
-            return (values[half - 1] + values[half]) / 2.0;
-        }
-
         switch(cellSchema.aggregation){
             case "show_unique":
-                return addDB(allValue.filter((value,index,arr) => arr.indexOf(value) === index).map(e => [e]))
+                return allValue.filter((value,index,arr) => arr.indexOf(value) === index).map(e => [e])
             case "count":
-                return addDB([[targetDataId.length]])
+                return [[targetDataId.length]   ]
             case "count_values":
-                return addDB([[targetDataId.length]])
+                return [[targetDataId.length]]
             case 'unique':
-                return addDB([[allValue.filter((value,index,arr) => arr.indexOf(value) === index).length]])
+                return [[allValue.filter((value,index,arr) => arr.indexOf(value) === index).length]]
             case 'empty':
-                return addDB([[empty]])
+                return [[empty]]
             case 'not_empty':
-                return addDB([[not_empty]])
+                return [[not_empty]]
             case 'percent_empty':
-                return addDB([[empty / targetDataId.length * 100,['%']]])
+                return [[empty / targetDataId.length * 100,['%']]]
             case 'percent_not_empty':
-                return addDB([[not_empty / targetDataId.length * 100,['%']]])
+                return [[not_empty / targetDataId.length * 100,['%']]]
             case 'earliest_date':
-                return addDB([['ll',[['d',{start_date:Math.min(...allDates.map(e => new Date(e as string).getTime()))}]]]])
+                return [['ll',[['d',{start_date:Math.min(...allDates.map(e => new Date(e as string).getTime()))}]]]]
             case 'latest_date':
-                return addDB([['ll',[['d',{start_date:Math.max(...allDates.map(e => new Date(e as string).getTime()))}]]]])
+                return [['ll',[['d',{start_date:Math.max(...allDates.map(e => new Date(e as string).getTime()))}]]]]
             case 'date_range': // need to make this unit to days years minutes
-                return addDB([[
+                return [[
                     (Math.max(...allDates.map(e => new Date(e as string).getTime())) - 
                     Math.min(...allDates.map(e => new Date(e as string).getTime()))) / (60 * 60 * 24 * 1000)]]
-                )
             case 'sum':
-                return addDB([[allValue.reduce((x,y) => x + y)]])
+                return [[allValue.reduce((x,y) => x + y)]]
             case 'average':
-                return addDB([[allValue.reduce((x,y) => x + y) / not_empty]])
+                return [[allValue.reduce((x,y) => x + y) / not_empty]]
             case 'median':
-                return addDB([[median(allValue)]])
+                return [[median(allValue)]]
             case 'min':
-                return addDB([[Math.min(...allValue)]])
+                return [[Math.min(...allValue)]]
             case 'max':
-                return addDB([[Math.max(...allValue)]])
+                return [[Math.max(...allValue)]]
             case 'range':
-                return addDB([[Math.max(...allValue) - Math.min(...allValue)]])
+                return [[Math.max(...allValue) - Math.min(...allValue)]]
             case 'checked':
-                return addDB([[allValue.filter(e => e === 'Yes').length]])
+                return [[allValue.filter(e => e === 'Yes').length]]
             case 'unchecked':
-                return addDB([[allValue.filter(e => e === 'No').length]])
+                return [[allValue.filter(e => e === 'No').length]]
             case 'percent_checked':
                 const trueValue = allValue.filter(e => e === 'Yes').length
-                return addDB([[trueValue ? (trueValue / allValue.length * 100).toFixed(1) : 0,['%']]])
+                return [[trueValue ? (trueValue / allValue.length * 100).toFixed(1) : 0,['%']]]
             case 'percent_unchecked':
                 const falseValue = allValue.filter(e => e === "No").length
-                return addDB([[falseValue ? (falseValue / allValue.length * 100).toFixed(1) : 0,['%']]])
+                return [[falseValue ? (falseValue / allValue.length * 100).toFixed(1) : 0,['%']]]
             default:
-                const groupId = targetSchema.groups?.find(e => e.name === cellSchema.aggregation.groupName).optionIds[0]
+                const groupId = targetSchema.groups?.find(e => e.name === cellSchema.aggregation.groupName)!.optionIds[0]
                 const optionId =  targetSchema.options?.find(e => e.id === groupId)
                 const groupCount = allValue?.filter(e =>  ((e === undefined || e === '') ? targetSchema.defaultOption : e) === optionId?.value)
                 switch(cellSchema.aggregation?.operator){
@@ -161,80 +197,49 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                     case 'count_per_group':
                         return [[`${groupCount.length} / ${allValue.length}`]]
                     default:
-                        return [['NONE']]
+                        const rollupNames = targetDataId.map(e => TableMap.value.value[e as string][targetSchemaName])
+                        return rollupNames
                 }
         }
     }
-    const getContent = (cellContent:ColumnSchemaType,data:tableValueProperties) => {
-        switch(cellContent.type){
-            case 'title':
-            case 'number':
-            case 'checkbox':
-            case 'url':
-                return TableMap.value.value[data.id][cellContent.name]
-            case 'date':
-                if(TableMap.value.value[data.id][cellContent.name]?.[0][1])
-                    return [[cellContent.date_format ?? 'll',TableMap.value.value[data.id][cellContent.name]?.[0][1]]]
-                return [[undefined]] 
-            case 'created_by':
-                return
-            case 'status':
-            case 'select':
-                const tempValue = TableMap.value.value[data.id][cellContent.name]
-                return [(tempValue?.[0][0] == '' ||tempValue?.[0][0] == undefined) ? [[cellContent.defaultOption ?? '']] : tempValue]
-            case 'last_edited_by':
-                return
-            case 'person': //api not supported
-                return
-            case 'multi_select':
-                return (TableMap.value.value[data.id][cellContent.name]?.[0][0] as string)?.split(',').map(e => [[e]])
-            case 'phone_number':
-            case 'email':
-                return [[TableMap.value.value[data.id][cellContent.name]?.[0][0],['_']]]
-            case 'file': //파일과 미디어
-                return [['file‣',TableMap.value.value[data.id][cellContent.name]?.[0][1]]]
-            case 'relation':
-                return
-            case 'create_time':
-                return
-            case 'last_edited_time':
-                return
-            case 'formula':
-                return getFormula(cellContent.formula,data)
-            case 'rollup':
-                return rollup(cellContent,data)
+
+    const getFormula  = (schemaData:ColumnSchemaType,data:tableValueProperties) => {
+        console.group()
+        console.debug('[Formula]:','schemaData',schemaData,data)
+        let returnValue
+        try{
+            returnValue = formula(schemaData,schemaData.formula,data)
         }
+        catch(e){
+            console.error()
+        }
+        console.debug('result:',returnValue)
+        console.groupEnd()
+        if(schemaData.formula.result_type === 'checkbox') return [[returnValue ? "Yes" : "No"]]
+        if(schemaData.formula.result_type === 'text') return [[returnValue]]
+        return returnValue
     }
 
-
-    return{
-        collection,
-        format,
-        properties,
-        parent_id,
-        parent,
-        data,
-        schema,
-        type,
-        rollup,
-        getContent,
-        setDBTable,
-        getDBTable,
-        setRelationTable
-    }
-}
-
-export const getFormula  = (cellFormula:Formula,data:tableValueProperties) => {
-    const testing = formula(cellFormula,data)
-    console.log('result',testing)
-    return testing
-}
-
-export const formula = (cellFormula:Formula,data:tableValueProperties) => {
-    let testing = [] as FormulaBaseType[]
-
-    const property = (cellFormula:Formula) => {
-        return data[cellFormula.name as string]?.[0][0]
+    const formula = (schemaData:ColumnSchemaType,cellFormula:Formula,data:tableValueProperties) => {
+        let arg = cellFormula?.args?.map(e => formula(schemaData,e as Formula,data)) as FormulaBaseType[]
+        switch(cellFormula?.type){
+            case 'constant':
+                return constant(cellFormula)
+            case 'function':
+                return function_(cellFormula,arg)
+            case 'operator':
+                return operator(cellFormula,arg)
+            case 'conditional':
+                return conditional(schemaData,cellFormula,data)
+            case 'property':
+                const targetSchema = Object.entries(TableMap.schema.value).find(([key,value]) => value.includes(cellFormula.id as string))?.[0]
+                if(!targetSchema) return ''
+                const testingProps = props.blockMap[targetSchema].collection.schema[cellFormula.id as string]
+                const propertValue =  getProps(testingProps,data)
+                console.debug('[Formula] - property',propertValue,testingProps,data)
+                if(propertValue?.[0]?.[1]?.[0] === '%') return propertValue?.[0]?.[0] * 0.01
+                return propertValue?.[0][0] ?? propertValue
+        }
     }
 
     const constant = (type:Formula) => {
@@ -248,8 +253,15 @@ export const formula = (cellFormula:Formula,data:tableValueProperties) => {
             case "false":
                 return false;
         }
-        console.log('constant',type.value)
+        console.debug('[Formula] - constant',type.value)
         return type.value
+    }
+
+    const conditional = (schemaData:ColumnSchemaType,type:Formula,data:tableValueProperties) => {
+        const conditionArg = formula(schemaData,type.condition,data)
+        if(conditionArg?.[0]?.[0] === "Yes" || conditionArg)
+            return formula(schemaData,type.true,data)
+        else return formula(schemaData,type.false,data)
     }
 
 
@@ -259,8 +271,8 @@ export const formula = (cellFormula:Formula,data:tableValueProperties) => {
                 return if_(data as FormulaBaseType[])
             case 'add':
                 return add(data as number[])
-            case 'substract':
-                return substract(data as number[])
+            case 'subtract':
+                return subtract(data as number[])
             case 'multiply':
                 return multiply(data as number[])
             case 'divide':
@@ -283,11 +295,21 @@ export const formula = (cellFormula:Formula,data:tableValueProperties) => {
                 return equal(data as boolean[])
             case 'unequal':
                 return unequal(data as boolean[])
+            case 'larger':
+                return larger(data as FormulaBaseType[])
+            case 'largerEq':
+                return largerEq(data as FormulaBaseType[])
+            case 'smaller':
+                return smaller(data as FormulaBaseType[])
+            case 'smallerEq':
+                return smallerEq(data as FormulaBaseType[])
         }
     }
 
     const function_ = (type:Formula,data:FormulaBaseType[]) => {
         switch(type.name){
+            case 'if':
+                return if_(data as FormulaBaseType[])
             case 'concat':
                 return concat(data as string[])
             case 'join':
@@ -320,6 +342,8 @@ export const formula = (cellFormula:Formula,data:tableValueProperties) => {
                 return ceil(data as number[])
             case 'floor':
                 return floor(data as number[])
+            case 'round':
+                return round(data as number[])
             case 'ln':
                 return ln(data as number[])
             case 'log10':
@@ -375,7 +399,7 @@ export const formula = (cellFormula:Formula,data:tableValueProperties) => {
 
     const if_ = ([arg1,args2,args3]:FormulaBaseType[]) => arg1 ? args2 : args3
     const add = ([arg1,arg2]:number[]) => arg1 + arg2
-    const substract = ([arg1,arg2]:number[]) => arg1 - arg2
+    const subtract = ([arg1,arg2]:number[]) => arg1 - arg2
     const multiply= ([arg1,arg2]:number[]) => arg1 * arg2
     const divide = ([arg1,arg2]:number[]) => arg1 / arg2
     const pow = ([arg1,arg2]:number[]) => Math.pow(arg1,arg2)
@@ -396,10 +420,7 @@ export const formula = (cellFormula:Formula,data:tableValueProperties) => {
     const join =([arg1,...args]:string[]) => args.join(arg1)
     const slice = ([arg1,arg2,arg3]:FormulaBaseType[]) => (arg1 as string).slice(arg2 as number,arg3 as number) 
     const length_ = ([arg1]:string[]) => arg1.length 
-    const format_ = ([arg1]:FormulaBaseType[]) => {
-        console.log('format',arg1)
-        return  `${arg1}` 
-    }
+    const format_ = ([arg1]:FormulaBaseType[]) => `${arg1}` 
     const toNum = ([arg1]:(number)[]) => +arg1 
     const contains = ([arg1,arg2]:string[]) => arg1.indexOf(arg2) > 0 
     const replace = ([arg1,arg2,arg3]:FormulaBaseType[]) => format_([arg1]).replace(arg2 as string,arg3 as string) 
@@ -420,28 +441,17 @@ export const formula = (cellFormula:Formula,data:tableValueProperties) => {
     const sqrt = ([arg1]:number[]) => Math.sqrt(arg1) 
     const round = ([arg1]:number[]) => Math.round(arg1) 
 
-    if(cellFormula?.args){
-        testing = cellFormula.args.map((e,i) => formula(e as Formula,data) as FormulaBaseType)
+    return {
+        collection,
+        format,
+        properties,
+        parent_id,
+        parent,
+        data,
+        schema,
+        getProps,
+        setProps,
+        preloadRelation
     }
-    console.log('cellFormula',cellFormula,testing)
 
-    switch(cellFormula?.type){
-        case 'constant':
-            return constant(cellFormula)
-        case 'function':
-            return function_(cellFormula,testing)
-        case 'operator':
-            return operator(cellFormula,testing)
-        case 'conditional':
-            break;
-        case 'property':
-            return property(cellFormula)
-    }
-}
-
-
-const testing = (cellFormula:Formula,data:tableValueProperties,value:any) => {
-    cellFormula?.args?.map(e => {
-
-    })
 }

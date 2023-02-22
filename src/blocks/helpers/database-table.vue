@@ -10,15 +10,16 @@ const props = defineProps({...defineDatabaseProps, ...defineNotionProps })
 //@ts-ignore
 const { pass,parent,properties:blockProperties } = useNotionBlock(props)
 //@ts-ignore
-const { schema,data,properties,setDBTable,setRelationTable } = useDatabase(props)
+const { schema,data,properties,preloadRelation,setProps } = useDatabase(props)
 
 const isVisible = (columnId:TableBlockProperties) => columnId.visible
 
-onBeforeMount(() => {
-    data.value.forEach((d,i) => {
-        setDBTable(parent.value.value.id,d.id,d)
+onMounted(() => {
+    Object.entries(schema.value).forEach(([key,value]) => {
+        data.value.forEach(d => {
+            setProps(value,d)
+        })
     })
-    setRelationTable(schema.value)
 })
 
 </script>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {  computed, defineComponent, PropType } from 'vue'
+import {  computed, defineComponent, PropType, watchEffect } from 'vue'
 import type {  ColumnSchemaType, DecorationType, SchemaSelectGroup, SchemaSelectOption, tableValueProperties } from '@/lib/types';
 import { defineNotionProps,useNotionBlock } from '@/lib/blockable';
 import { defineDatabaseProps, useDatabase } from '@/lib/database';
@@ -17,7 +17,7 @@ const props = defineProps({
 //@ts-ignore
 const { blockMap,pass,parent } = useNotionBlock(props)
 //@ts-ignore
-const { getDBTable } = useDatabase(props)
+const { getDBTable,getProps } = useDatabase(props)
 
 
 
@@ -39,6 +39,7 @@ const options = (a:DecorationType) => {
     }
     return ""
 }
+
 </script>
 
 
@@ -53,41 +54,35 @@ export default defineComponent({
 <template>
     <div class="notion-database-table-cell">
         <div class="notion-database-table-text">
-            <NotionTextRenderer v-if="!data" v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
-            <NotionTextRenderer v-else-if="type('title')" v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
+            {{ getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }}
+            <!-- <NotionTextRenderer v-if="!data" v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
+            <NotionTextRenderer v-else-if="type('title')" v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             <div v-else-if="type(['multi_select','select'])" class="dataabase-selectbox-conatiner">
-                <div v-for="e in getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" 
+                <div v-for="e in getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" 
                 :style="{backgroundColor:`var(--notion-select-${options((e as DecorationType))})`}" 
                 class="database-selectbox">
                     <NotionTextRenderer v-bind="pass" :text="e"/>
                 </div>
             </div>
             <div v-else-if="type('number')" class="database-number">
-                <NotionTextRenderer v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" />
+                <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" />
             </div>
             <div v-else-if="type('status')">
-                <div v-for="e in getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" 
+                <div v-for="e in getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" 
                 :style="{backgroundColor:`var(--notion-select-${options((e as DecorationType))})`}" 
                 class="database-selectbox">
                     <NotionTextRenderer v-bind="pass" :text="e"/>
                 </div>
             </div>
             <div v-else-if="type(['date','file','url','email','phone_number'])">
-                <NotionTextRenderer v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
+                <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             </div>
             <CheckBoxIcon v-else-if="type('checkbox')" v-bind="pass" :is-on="isTrue"/>
             <div v-else-if="type('rollup')">
-                <NotionTextRenderer v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
+                <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             </div>
             <div v-else-if="type('formula')">
-                {{ getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }}
-            </div>
-                            <!-- {{ getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }} -->
-                <!-- <NotionTextRenderer v-bind="pass" :text="getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/> -->
-            <!-- <NotionTextRenderer v-if="!data" v-bind="pass" :text="getText"/>
-            <NotionTextRenderer v-else-if="type(['date','status','select','number','phone_number','multi_select','email'])" v-bind="pass" :text="getText"/>
-            <div></div>
-            <div></div> -->
+            </div> -->
         </div>
     </div>
 </template>
