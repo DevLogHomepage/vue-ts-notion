@@ -1,5 +1,5 @@
 import { computed, PropType, ref } from "vue";
-import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, tableValueProperties, BlockValue } from "./types";
+import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, tableValueProperties, BlockValue, AggregationType, DecorationType } from "./types";
 
 type FormulaBaseType=
     number
@@ -7,8 +7,24 @@ type FormulaBaseType=
     | string
     | Date 
 
+// 테이블 데이터를 각각 저장하기 위한 자료형
+/** Type to save tableMap row data */ 
 type tableMapType = {[nameId:string]:any}
+
+// 각 collection Data(데이터 베이스)의 관계를 저장하기 위한 자료형
+/** 
+ * Type to save each of collection Data(database)'s relation
+ * 
+ * each releation data's uid(schema id) is store with parent block id
+ */
 type relationMapType = {[nameId:string]:string}
+
+// schmea 아이디와 schema 아이디가 존재하는 블럭의 아이디와 함께 저장하기 위한 자료형
+/**
+ * Type to save schema id with parent block id
+ * 
+ * use in relation types MUST NEEDED
+ */
 type schemaMapType = {[nameId:string]:string[]}
 
 export const defineDatabaseProps = {
@@ -26,13 +42,19 @@ class TableMap{
 }
 
 export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabaseProps>) => {
-
+    // block's collection
     const collection = computed(() => props.collectionData)
+    // collection's format
     const format = computed(() => collection.value?.format)
+    // collection's properties (properties store database view data)
     const properties = computed(() => format?.value.table_properties ?? [])
+    // database's parent block id
     const parent_id = computed(() => collection.value?.parent_id ?? '')
+    // database's parent
     const parent = computed(() => props.blockMap![parent_id.value])
+    // database display data (different with properties data)
     const data = computed(() => parent.value?.collection.data)
+    // collection view's schema data
     const schema = computed(() => parent.value.collection.schema)
     
     /**
@@ -43,8 +65,31 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
      * @returns `decorationType` extract data from `tableData` using `schemaData`'s data 
      */
     const getProps = (schemaData:ColumnSchemaType,tableData:tableValueProperties) => {
-        if(!tableData) return schemaData.name
+        if(!tableData) return [[schemaData.name]] //case when tableData got undefined
+        //case when tableData doesn't have schemaData property
         if(!tableData[schemaData.name] || !schemaData) setProps(schemaData,tableData)
+        // which different type have different process to make `decorationType`
+        switch(schemaData.type){
+            case 'title':
+            case 'number':
+            case 'checkbox':
+            case 'url':
+                return tableData[schemaData.name]
+            case 'date':
+                if(TableMap.value.value[tableData.id][schemaData.name]?.[0][1])
+                    return [[schemaData.date_format ?? 'll',TableMap.value.value[tableData.id][schemaData.name]?.[0][1]]]
+            case 'status':
+            case 'select':
+                const tempValue = tableData[schemaData.name]
+                return (tempValue?.[0][0] == '' ||tempValue?.[0][0] == undefined) ? [[schemaData.defaultOption ?? '']] : tempValue
+            case 'multi_select':
+                return (tableData[schemaData.name]?.[0][0] as string)?.split(',').map(e => [e])
+            case 'phone_number':
+            case 'email':
+                return [[tableData[schemaData.name]?.[0][0],['_']]]
+            case 'file': //파일과 미디어
+                return [['file‣',tableData[schemaData.name]?.[0][1]]]
+        }
         return tableData[schemaData.name]
     }
 
@@ -56,16 +101,22 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
      */
     const setProps = (schemaData:ColumnSchemaType,tableData:tableValueProperties) => {
         switch(schemaData.type){
+            //this is for not making warnings
+            //all of the database Table props are built in backend api
+            case 'relation':
+            case 'select':
+            case 'title':
+            case 'checkbox':
+            case 'date':
+            case 'status':
+            case 'multi_select':
+                break
+            // rollup and formula are needed to calculate from data so setProps are needed
             case 'rollup':
                 TableMap.value.value[tableData.id][schemaData.name] = rollup(schemaData,tableData)
                 break
             case 'formula':
                 TableMap.value.value[tableData.id][schemaData.name] =getFormula(schemaData,tableData)
-                break
-            case 'select':
-            case 'multi_select':
-                break
-            case 'relation':
                 break
             default:
                 console.warn(`${schemaData.type} is NOT SUPPORTED!`)
@@ -118,9 +169,9 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
      * @returns DecorationType[]
      */
     const rollup = (cellSchema:ColumnSchemaType,data:tableValueProperties) => {
-        const relationId = schema.value[cellSchema.relation_property.replace('//','/')].collection_id
-        const relationName = schema.value[cellSchema.relation_property.replace('//','/')].name
-        const relationProperty = schema.value[cellSchema.relation_property.replace('//','/')].property
+        const relation = schema.value[cellSchema.relation_property.replace('//','/')]
+        const relationName = relation.name
+        const relationProperty = relation.property
         const targetProperty = cellSchema.target_property
         const targetSchema = props?.blockMap[TableMap.relation.value[relationProperty]].collection.schema[targetProperty]
         const targetSchemaName = targetSchema.name
@@ -132,12 +183,17 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
             if(!TableMap.value.value[e as string]) setProps(targetSchema,data)
         })
 
+        // length of data that are blanked
         const empty = targetDataId?.filter(e => TableMap.value.value[e as string][targetSchemaName] === undefined).length
+        // length of data that are not blanked
         const not_empty = targetDataId?.filter(e => TableMap.value.value[e as string][targetSchemaName] !== undefined).length
+        // all of the `decorationType` of relation 
         const allTesting = targetDataId?.map(e => getProps(targetSchema,TableMap.value.value[e as string]))
+        // all text of the `decorationType` Array
         const allValue = allTesting?.map(e => e?.[0][0]).filter(e => e !== undefined)
+        // all decorationValue of the `decorationType` Array
         const allDateValue = allTesting?.map(e => e?.[0][1]).filter(e => e !== undefined)
-
+        // all Date data of the `decorationType` Array
         const allDates = allDateValue?.map(e => e?.[0]?.[1]?.start_date).concat(allDateValue.map(e => e?.[0]?.[1]?.end_date))
         
         switch(cellSchema.aggregation){
@@ -188,21 +244,28 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                 const falseValue = allValue.filter(e => e === "No").length
                 return [[falseValue ? (falseValue / allValue.length * 100).toFixed(1) : 0,['%']]]
             default:
-                const groupId = targetSchema.groups?.find(e => e.name === cellSchema.aggregation.groupName)!.optionIds[0]
+                const groupId = targetSchema.groups?.find(e => e.name === (cellSchema.aggregation as AggregationType).groupName)!.optionIds[0]
                 const optionId =  targetSchema.options?.find(e => e.id === groupId)
                 const groupCount = allValue?.filter(e =>  ((e === undefined || e === '') ? targetSchema.defaultOption : e) === optionId?.value)
-                switch(cellSchema.aggregation?.operator){
+                switch((cellSchema.aggregation as AggregationType)?.operator){
                     case 'percent_per_group':
                         return [[groupCount.length ? (groupCount.length /allValue.length * 100).toFixed(1) : 0,['%']]]
                     case 'count_per_group':
                         return [[`${groupCount.length} / ${allValue.length}`]]
                     default:
-                        const rollupNames = targetDataId.map(e => TableMap.value.value[e as string][targetSchemaName])
+                        const rollupNames = targetDataId.map(e => TableMap.value.value[e as string][targetSchemaName]?.[0])
                         return rollupNames
                 }
         }
     }
 
+    /**
+     * To start recursive function in formula type
+     * 
+     * @param schemaData database table schema data
+     * @param data data of the row
+     * @returns DecorationType[]
+     */
     const getFormula  = (schemaData:ColumnSchemaType,data:tableValueProperties) => {
         console.group()
         console.debug('[Formula]:','schemaData',schemaData,data)
@@ -220,7 +283,15 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         return returnValue
     }
 
-    const formula = (schemaData:ColumnSchemaType,cellFormula:Formula,data:tableValueProperties) => {
+    /**
+     * Main part of formula recursive
+     * 
+     * @param schemaData database table schema data
+     * @param cellFormula database's formula
+     * @param data data of the row
+     * @returns `Formula` | `FormulaBaseType`
+     */
+    const formula = (schemaData:ColumnSchemaType,cellFormula:Formula,data:tableValueProperties):Formula | FormulaBaseType => {
         let arg = cellFormula?.args?.map(e => formula(schemaData,e as Formula,data)) as FormulaBaseType[]
         switch(cellFormula?.type){
             case 'constant':
@@ -238,10 +309,20 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                 const propertValue =  getProps(testingProps,data)
                 console.debug('[Formula] - property',propertValue,testingProps,data)
                 if(propertValue?.[0]?.[1]?.[0] === '%') return propertValue?.[0]?.[0] * 0.01
+                if(Array.isArray(propertValue[0][0])){
+                    console.log('proper',propertValue[0][0][0])
+                    return propertValue[0][0][0]
+                }
                 return propertValue?.[0][0] ?? propertValue
         }
     }
 
+    /**
+     * process for constant type in formula
+     * 
+     * @param type database formula
+     * @returns `FormulaBaseType`
+     */
     const constant = (type:Formula) => {
         switch(type.name){
             case "e": 
@@ -257,15 +338,29 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         return type.value
     }
 
+    /**
+     * to process conditional type in formula( different with function if)
+     * 
+     * @param schemaData database table schema data
+     * @param type database formula
+     * @param data data of the row
+     * @returns `Formula` | `FormulaBaseType`
+     */
     const conditional = (schemaData:ColumnSchemaType,type:Formula,data:tableValueProperties) => {
         const conditionArg = formula(schemaData,type.condition,data)
-        if(conditionArg?.[0]?.[0] === "Yes" || conditionArg)
+        if(conditionArg)
             return formula(schemaData,type.true,data)
         else return formula(schemaData,type.false,data)
     }
 
-
-    const operator = (type:Formula,data:FormulaBaseType[]) => {
+    /**
+     * to process operator type in formula( different with function if)
+     * 
+     * @param type database formula
+     * @param data data of the row
+     * @returns `FormulaBaseType`
+     */
+    const operator = (type:Formula,data:FormulaBaseType[]):FormulaBaseType => {
         switch(type.name){
             case 'if':
                 return if_(data as FormulaBaseType[])
@@ -303,10 +398,21 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                 return smaller(data as FormulaBaseType[])
             case 'smallerEq':
                 return smallerEq(data as FormulaBaseType[])
+            default:
+                console.warn(`${type.name} is NOT SUPPORTED!!`)
+                return ''
         }
     }
 
-    const function_ = (type:Formula,data:FormulaBaseType[]) => {
+    /**
+     * to process function type in formula( different with function if)
+     * 
+     * @param type database formula
+     * @param data data of the row
+     * @returns `FormulaBaseType`
+     */
+    const function_ = (type:Formula,data:FormulaBaseType[]):FormulaBaseType => {
+        //Todo: this `function` type's function needed to fill
         switch(type.name){
             case 'if':
                 return if_(data as FormulaBaseType[])
@@ -394,6 +500,9 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                 return smaller(data as FormulaBaseType[])
             case 'smallerEq':
                 return smallerEq(data as FormulaBaseType[])
+            default:
+                console.warn(`${type.name} is NOT SUPPORTED!!`)
+                return ''
         }     
     }
 

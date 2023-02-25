@@ -4,6 +4,7 @@ import type {  ColumnSchemaType, DecorationType, SchemaSelectGroup, SchemaSelect
 import { defineNotionProps,useNotionBlock } from '@/lib/blockable';
 import { defineDatabaseProps, useDatabase } from '@/lib/database';
 import NotionTextRenderer from '@/blocks/helpers/text-renderer.vue'
+import NotionTextSeperater from './text-seperater.vue';
 import CheckBoxIcon from './check-box-icon.vue';
 // import { formula } from '@/lib/math';
 
@@ -27,7 +28,7 @@ const type = (t:string | string[]) => {
 }
 
 const isTrue = computed(() => {
-    const value = getDBTable(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)
+    const value = getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)
     return value?.[0][0] === 'Yes'
 })
 
@@ -47,42 +48,37 @@ const options = (a:DecorationType) => {
 
 export default defineComponent({
     name: "NotionDBTableCell",
-    components: { CheckBoxIcon,NotionTextRenderer }
+    components: { CheckBoxIcon,NotionTextRenderer,NotionTextSeperater}
 })
+
+//'rollup'
 </script>
 
 <template>
     <div class="notion-database-table-cell">
         <div class="notion-database-table-text">
-            {{ getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }}
-            <!-- <NotionTextRenderer v-if="!data" v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
-            <NotionTextRenderer v-else-if="type('title')" v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
-            <div v-else-if="type(['multi_select','select'])" class="dataabase-selectbox-conatiner">
-                <div v-for="e in getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" 
-                :style="{backgroundColor:`var(--notion-select-${options((e as DecorationType))})`}" 
-                class="database-selectbox">
-                    <NotionTextRenderer v-bind="pass" :text="e"/>
-                </div>
+            <!-- {{ getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }} -->
+            <NotionTextRenderer v-if="!data" v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
+            <!-- <NotionTextRenderer v-else-if="type('title')" v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/> -->
+            <div v-else-if="type(['multi_select','select','status'])" class="dataabase-selectbox-conatiner">
+                s{{ getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }}
+                <!-- <NotionTextSeperater v-bind="pass"
+                :color-options="props.schemaData?.options"
+                :text-data="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/> -->
             </div>
-            <div v-else-if="type('number')" class="database-number">
+            <!-- <div v-else-if="type(['number'])" class="database-number">
                 <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" />
-            </div>
-            <div v-else-if="type('status')">
-                <div v-for="e in getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" 
-                :style="{backgroundColor:`var(--notion-select-${options((e as DecorationType))})`}" 
-                class="database-selectbox">
-                    <NotionTextRenderer v-bind="pass" :text="e"/>
-                </div>
             </div>
             <div v-else-if="type(['date','file','url','email','phone_number'])">
                 <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
-            </div>
-            <CheckBoxIcon v-else-if="type('checkbox')" v-bind="pass" :is-on="isTrue"/>
-            <div v-else-if="type('rollup')">
-                <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
-            </div>
-            <div v-else-if="type('formula')">
             </div> -->
+            <!-- <CheckBoxIcon v-else-if="type('checkbox')" v-bind="pass" :is-on="isTrue"/> -->
+            <div v-else-if="type('formula')">
+                f{{ getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }}
+            </div>
+            <div v-else-if="type('rollup')">
+                r{{ getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }}
+            </div>
         </div>
     </div>
 </template>

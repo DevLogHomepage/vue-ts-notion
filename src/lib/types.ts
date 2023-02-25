@@ -154,16 +154,18 @@ export type ColumnSchemaType = {
   target_property:string
   target_property_type: string
   property:string
-  aggregation:string| {
-    operator: string
-    groupName: string
-  }
+  aggregation:string | AggregationType
   collection_id:string
   options:SchemaSelectOption[]
   groups:SchemaSelectGroup[]
   date_format:string
   defaultOption:string
 };
+
+export type AggregationType = {
+  operator: string
+  groupName: string
+}
 
 export type SchemaSelectOption =   {
   id:string,
@@ -175,6 +177,7 @@ export type SchemaSelectGroup =   {
   id:string,
   color:string,
   name:string
+  optionIds:string[]
 }
 
 export interface BlockValue {
