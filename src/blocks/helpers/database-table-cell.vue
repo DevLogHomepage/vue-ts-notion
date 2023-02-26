@@ -57,6 +57,7 @@ export default defineComponent({
 <template>
     <div class="notion-database-table-cell">
         <div class="notion-database-table-text">
+            <!-- {{ getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }} -->
             <NotionTextRenderer v-if="!data" v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             <NotionTextRenderer v-else-if="type('title')" v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             <div v-else-if="type(['multi_select','select','status'])" class="dataabase-selectbox-conatiner">
@@ -70,13 +71,17 @@ export default defineComponent({
             <div v-else-if="type(['date','file','url','email','phone_number'])">
                 <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             </div>
+            <div v-else-if="type(['rollup','relation'])">
+                <!-- {{ getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }} -->
+                <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
+            </div>
             <CheckBoxIcon v-else-if="type('checkbox')" v-bind="pass" :is-on="isTrue"/>
             <div v-else-if="type('formula')">
                 <div v-if="schemaData?.formula.result_type === 'checkbox'">
                     <CheckBoxIcon v-bind="pass" :is-on="isTrue"/>
                 </div>
                 <div v-else-if="schemaData?.formula.result_type === 'text'"> 
-                    <NotionTextRenderer :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
+                    <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
                 </div>
             </div>
         </div>

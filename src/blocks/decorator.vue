@@ -2,9 +2,9 @@
 import { useNotionBlock, defineNotionProps } from "@/lib/blockable"
 import NotionKatek from "@/blocks/helpers/katex.vue"
 import { computed, PropType } from "vue"
-import { DecorationType } from "@/lib/types";
+import { BlockMap, ColumnSchemaType, DecorationType } from "@/lib/types";
 import moment from 'moment'
-
+import {TableMap} from "@/lib/database"
 const props = defineProps({
   content: Object as PropType<DecorationType>,
   ...defineNotionProps,
@@ -36,6 +36,15 @@ const target = computed(() => {
   return blockProps.textLinkTarget
 })
 
+const name = (id:string) => {
+  const data = TableMap.value.value[id]
+  const parentId = data.parent_id_title as string
+  const relationSchema = (props.blockMap as BlockMap)[parentId].collection.schema
+  const [_,value] = Object.entries(relationSchema).find(([_,value]) => value.type === 'title') ?? ['','']
+
+  return data[(value as ColumnSchemaType).name][0][0]
+}
+
 const dateFormated = (date:string) => {
   if(!date) return ''
   return moment(date).format(text.value as string)
@@ -45,12 +54,17 @@ const dateFormated = (date:string) => {
 <script lang="ts">
 export default {
   name: "NotionDecorator",
+  inheritAttrs: false
 }
 </script>
 
 <template>
+  <!-- {{ decoratorKey }} -->
+  <span v-if="decoratorKey === 'p'">
+    {{ name(decoratorValue as string) }}
+  </span>
   <component
-    v-if="isPageLink && hasPageLinkOptions"
+    v-else-if="isPageLink && hasPageLinkOptions"
     class="notion-link"
     v-bind="pageLinkProps(decoratorValue as string)"
     :is="blockProps.pageLinkOptions?.component"

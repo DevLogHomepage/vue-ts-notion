@@ -35,7 +35,7 @@ export const defineDatabaseProps = {
 /**
  * temporary data store variable for displaying table
  */
-class TableMap{
+export class TableMap{
     static value = ref<tableMapType>({} as tableMapType)
     static relation = ref<relationMapType>({} as relationMapType)
     static schema = ref<schemaMapType>({} as schemaMapType)
@@ -64,7 +64,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
      * @param tableData data of the row
      * @returns `decorationType` extract data from `tableData` using `schemaData`'s data 
      */
-    const getProps = (schemaData:ColumnSchemaType,tableData:tableValueProperties) => {
+    const getProps = (schemaData:ColumnSchemaType,tableData:tableValueProperties):DecorationType[] => {
         if(!tableData) return [[schemaData.name]] //case when tableData got undefined
         //case when tableData doesn't have schemaData property
         if(!tableData[schemaData.name] || !schemaData) setProps(schemaData,tableData)
@@ -86,9 +86,20 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                 return (tableData[schemaData.name]?.[0][0] as string)?.split(',').map(e => [e])
             case 'phone_number':
             case 'email':
-                return [[tableData[schemaData.name]?.[0][0],['_']]]
+                return [[tableData[schemaData.name]?.[0][0],[['_']]]]
             case 'file': //파일과 미디어
-                return [['file‣',tableData[schemaData.name]?.[0][1]]]
+                return [['file‣',tableData[schemaData.name]?.[0][1]]] as DecorationType[]
+            // case 'relation':
+            // case 'rollup':
+            //     const relation = tableData[schemaData.name]?.map(e => e?.[1]?.[0]).filter(e => e !== undefined)
+            //     console.log('relation',relation)
+            //     if(!relation) return tableData[schemaData.name]
+
+            //     const realtionId = relation.map(e => e?.[1])
+            //     const relationData = realtionId.map( e => TableMap.value.value[e as string])
+            //     const relationSchema = props.blockMap[relationData[0].parent_id_title].collection.schema
+            //     const [_,value] = Object.entries(relationSchema).find(([_,value]) => value.type === 'title') ?? ['','']
+            //     return relationData.map(e => e[(value as ColumnSchemaType).name][0])
         }
         return tableData[schemaData.name]
     }

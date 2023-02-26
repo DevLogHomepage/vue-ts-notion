@@ -38,7 +38,7 @@ export default defineComponent({
         <div v-for="e in textData" 
         :style="{backgroundColor:`var(--notion-select-${options(e as DecorationType)})`}" 
         class="database-selectbox">
-            <NotionTextRenderer v-bind="pass" :text="[e]"/>
+            <NotionTextRenderer v-bind="pass" :text="[e as DecorationType]"/>
         </div>
     </div>
 </template>
