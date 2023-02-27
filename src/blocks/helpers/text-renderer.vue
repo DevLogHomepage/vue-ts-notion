@@ -4,7 +4,7 @@ import NotionDecorator from "@/blocks/decorator.vue"
 import { PropType } from "vue"
 import { DecorationType } from "@/lib/types";
 
-const props = defineProps({ text: Object as PropType<DecorationType[]>, ...defineNotionProps })
+const props = defineProps({ text: Object as PropType<DecorationType[] | string[]>, ...defineNotionProps })
 //@ts-ignore
 const { pass, format } = useNotionBlock(props)
 </script>
@@ -17,6 +17,6 @@ export default {
 
 <template>
   <span>
-    <NotionDecorator v-for="(t, i) in text" :key="i" :content="t" v-bind="pass" />
+    <NotionDecorator v-for="(t, i) in text" :key="i" :content="t as DecorationType" v-bind="pass" />
   </span>
 </template>

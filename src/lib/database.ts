@@ -1,5 +1,5 @@
 import { computed, PropType, ref } from "vue";
-import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, tableValueProperties, BlockValue, AggregationType, DecorationType } from "./types";
+import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, tableValueProperties, BlockValue, AggregationType, DecorationType, DateFormat, SubDecorationType, PercentFormatType } from "./types";
 
 type FormulaBaseType=
     number
@@ -202,10 +202,11 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         const allTesting = targetDataId?.map(e => getProps(targetSchema,TableMap.value.value[e as string]))
         // all text of the `decorationType` Array
         const allValue = allTesting?.map(e => e?.[0][0]).filter(e => e !== undefined)
+        const allValueNum = allValue?.map(e => Number(e))
         // all decorationValue of the `decorationType` Array
         const allDateValue = allTesting?.map(e => e?.[0][1]).filter(e => e !== undefined)
         // all Date data of the `decorationType` Array
-        const allDates = allDateValue?.map(e => e?.[0]?.[1]?.start_date).concat(allDateValue.map(e => e?.[0]?.[1]?.end_date))
+        const allDates = allDateValue?.map(e => (e?.[0]?.[1] as DateFormat)?.start_date).concat(allDateValue.map(e => (e?.[0]?.[1] as DateFormat)?.end_date))
         
         switch(cellSchema.aggregation){
             case "show_unique":
@@ -233,17 +234,17 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                     (Math.max(...allDates.map(e => new Date(e as string).getTime())) - 
                     Math.min(...allDates.map(e => new Date(e as string).getTime()))) / (60 * 60 * 24 * 1000)]]
             case 'sum':
-                return [[allValue.reduce((x,y) => x + y)]]
+                return [[allValueNum.reduce((x,y) => x + y)]]
             case 'average':
-                return [[allValue.reduce((x,y) => x + y) / not_empty]]
+                return [[allValueNum.reduce((x,y) => x + y) / not_empty]]
             case 'median':
-                return [[median(allValue)]]
+                return [[median(allValueNum)]]
             case 'min':
-                return [[Math.min(...allValue)]]
+                return [[Math.min(...allValueNum)]]
             case 'max':
-                return [[Math.max(...allValue)]]
+                return [[Math.max(...allValueNum)]]
             case 'range':
-                return [[Math.max(...allValue) - Math.min(...allValue)]]
+                return [[Math.max(...allValueNum) - Math.min(...allValueNum)]]
             case 'checked':
                 return [[allValue.filter(e => e === 'Yes').length]]
             case 'unchecked':
@@ -319,7 +320,9 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                 const testingProps = props.blockMap[targetSchema].collection.schema[cellFormula.id as string]
                 const propertValue =  getProps(testingProps,data)
                 console.debug('[Formula] - property',propertValue,testingProps,data)
-                if(propertValue?.[0]?.[1]?.[0] === '%') return propertValue?.[0]?.[0] * 0.01
+                const subDecoration =propertValue?.[0]?.[1]?.[0][0]
+                const text = propertValue?.[0]?.[0]
+                if(subDecoration === '%') return Number(text) * 0.01
                 if(Array.isArray(propertValue[0][0])){
                     console.log('proper',propertValue[0][0][0])
                     return propertValue[0][0][0]

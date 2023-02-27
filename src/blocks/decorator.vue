@@ -2,7 +2,7 @@
 import { useNotionBlock, defineNotionProps } from "@/lib/blockable"
 import NotionKatek from "@/blocks/helpers/katex.vue"
 import { computed, PropType } from "vue"
-import { BlockMap, ColumnSchemaType, DecorationType } from "@/lib/types";
+import { BlockMap, ColumnSchemaType, DateFormat, DecorationType } from "@/lib/types";
 import moment from 'moment'
 import {TableMap} from "@/lib/database"
 const props = defineProps({
@@ -76,8 +76,8 @@ export default {
     <img :src="`${decoratorValue}`"/>
   </div>
   <span v-else-if="decoratorKey === 'd'" v-if="decoratorValue">
-    <div>{{ dateFormated(decoratorValue.start_date) }}</div>
-    <div v-if="decoratorValue.end_date"> → {{ dateFormated(decoratorValue.end_date) }}</div>
+    <div>{{ dateFormated((decoratorValue as DateFormat).start_date) }}</div>
+    <div v-if="(decoratorValue as DateFormat).end_date"> → {{ dateFormated((decoratorValue as DateFormat).end_date) }}</div>
   </span>
   <component
     v-else-if="decoratorKey === 'a' && hasPageLinkOptions && isInlinePageLink"
