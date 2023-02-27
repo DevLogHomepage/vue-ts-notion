@@ -12,6 +12,7 @@ import { mapPageUrl, pageLinkOptions } from "../lib/props"
 //   // todo tester: 235057194b954a60ace89c052a65d102
 //   blockMap.value = await getPageBlocks("4b2dc28a5df74034a943f8c8e639066a")
 // database: 0c996ac0bf5948e49f235c42efc80ce8
+// db-table: 37a4526a95aa423fb9f8ed21385954ff
 // })
 
 const { data: blockMap } = useGetPageBlocks("0c996ac0bf5948e49f235c42efc80ce8")
