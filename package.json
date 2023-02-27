@@ -1,12 +1,11 @@
 {
-  "name": "vue3-notion",
-  "version": "0.1.40",
+  "name": "collection-vue3-notion",
+  "version": "0.1.41",
   "description": "Vue 3 Unofficial Notion Renderer",
-  "homepage": "https://vue3-notion.vercel.app/",
-  "repository": "github:zernonia/vue3-notion",
+  "repository": "https://github.com/DevLogHomepage/vue-ts-notion",
   "main": "./dist/index.umd.js",
   "module": "./dist/index.es.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.es.js",
