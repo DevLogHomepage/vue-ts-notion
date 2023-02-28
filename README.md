@@ -163,6 +163,19 @@ Most common block types are supported. We happily accept pull requests to add su
 | Table Of Contents | ✅ Yes     |                        |
 | Databases         | ☑️ working on it |                        |
 
+## Supported collection-view(Database)
+
+these are database type are supported. 
+
+| Block Type        | Supported  | Notes                  |
+| ----------------- | ---------- | ---------------------- |
+| Table             | ✅ partly  | working on dark theme  |
+| Timeline          | ❌ No      |                        |
+| Board             | ❌ No      |                        |
+| Calendar          | ❌ No      |                        |
+| List              | ❌ No      |                        |
+| Gallery           | ❌ No      |                        |
+
 Please, feel free to [open an issue](https://github.com/zernonia/vue3-notion/issues/new) if you notice any important blocks missing or anything wrong with existing blocks.
 
 # 🌎 Local Development
