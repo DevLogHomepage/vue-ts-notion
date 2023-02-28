@@ -176,7 +176,7 @@ these are database type are supported.
 | List              | ❌ No      |                        |
 | Gallery           | ❌ No      |                        |
 
-Please, feel free to [open an issue](https://github.com/zernonia/vue3-notion/issues/new) if you notice any important blocks missing or anything wrong with existing blocks.
+Please, feel free to [open an issue](https://github.com/DevLogHomepage/vue-ts-notion/issues/new/choose) if you notice any important blocks missing or anything wrong with existing blocks.
 
 # 🌎 Local Development
 
