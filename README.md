@@ -53,7 +53,7 @@ This package doesn't handle the communication with the API (I planned to add thi
 ### Vue 3
 
 ```bash
-npm install vue3-notion
+npm install collection-vue3-notion
 # yarn add vue3-notion
 ```
 
