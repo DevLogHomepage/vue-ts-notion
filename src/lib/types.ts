@@ -9,11 +9,8 @@ export type unKnownFormatType = ["h"]; //TODO: need to change this type name
 export type UnderLineFormatType = ["_"]; //TODO: need to change this type name
 export type PercentFormatType = ["%"]; //TODO: need to change this type name
 export type LinkFormatType = ["a", string];
-export type DateFormatType = [
-  "d",
-  DateFormat
-];
-export type DateFormat = {
+export type DateFormatType = ["d",subDateFormat];
+export interface subDateFormat {
   type: "date"
   start_date: string
   end_date: string
