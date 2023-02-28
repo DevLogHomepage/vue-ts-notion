@@ -15,7 +15,7 @@ const typesNumber = ref(0)
 
 const header = (columnType:BlockValue) => [[(columnType?.name == '' || columnType?.name == undefined) ? columnType.type : columnType.name]] as DecorationType[]
 const setDisplayTable = (_:MouseEvent,index:number) => {typesNumber.value  = index}
-const underLine = (index:number) => (typesNumber.value === index) ? {borderBottom: 'solid 2px rgb(55,53,47)',paddingTop:'2px',color: 'rgba(55,53,47,1)'} : ''
+const underLine = (index:number) => (typesNumber.value === index) ? {borderBottom: 'solid 2px var(--notion-datatable-color)',paddingTop:'2px',color: 'var(--notion-datatable-color)'} : ''
 
 const tableTypes = computed(() => {
     return block?.value.collection.types
@@ -60,7 +60,7 @@ export default defineComponent({
     
             </div>
         </div>
-        <div v-for="(blockValId,blockValIndex) in tableTypes" :key="blockValIndex">
+        <div class="notion-database-table-section" v-for="(blockValId,blockValIndex) in tableTypes" :key="blockValIndex">
             <NotionDatabase v-if="blockValIndex == typesNumber"
             v-bind="pass"
             :collectionData="blockValId">
