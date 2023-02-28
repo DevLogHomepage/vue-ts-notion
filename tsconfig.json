@@ -19,6 +19,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "shim/*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "shim/*.d.ts","src/lib/*.ts"],
   "exclude": ["src/router/index.ts", "src/lib/props.ts", "src/main.ts", "src/env.d.ts"]
 }
