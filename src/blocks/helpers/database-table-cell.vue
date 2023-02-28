@@ -16,9 +16,9 @@ const props = defineProps({
 })
 
 //@ts-ignore
-const { blockMap,pass,parent } = useNotionBlock(props)
+const { pass } = useNotionBlock(props)
 //@ts-ignore
-const { getDBTable,getProps } = useDatabase(props)
+const { getProps,getRollupText } = useDatabase(props)
 
 
 
@@ -32,13 +32,16 @@ const isTrue = computed(() => {
     return value?.[0][0] === 'Yes'
 })
 
-const options = (a:DecorationType) => {
-    if(!props.data) return ""
-    for(let i of props.schemaData?.options as SchemaSelectOption[]){
-        if(i.value === a[0][0])
-            return i.color ?? 'default'
-    }
-    return ""
+const relation = (data:DecorationType[]) => {
+    const decorator = data?.[0]?.[1]
+    const decoratorKey = decorator?.[0]?.[0]
+    if(!decorator) return data
+    if(decoratorKey !== 'p') return data
+    data.forEach(e => {
+        if(e[1]?.[0][1] && getRollupText(e[1]?.[0][1] as string) === '')
+            data.shift()
+    })
+    return data
 }
 
 </script>
@@ -68,12 +71,12 @@ export default defineComponent({
             <div v-else-if="type(['number'])" class="database-number">
                 <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)" />
             </div>
-            <div v-else-if="type(['date','file','url','email','phone_number'])">
+            <div v-else-if="type(['date','file','url','email','phone_number','rollup'])">
                 <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
             </div>
-            <div v-else-if="type(['rollup','relation'])">
-                <!-- {{ getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }} -->
-                <NotionTextRenderer v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
+            <div v-else-if="type(['relation'])">
+                <!-- {{ rollup(getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties))}} -->
+                <NotionTextRenderer v-bind="pass" :text="relation(getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties))"/>
             </div>
             <CheckBoxIcon v-else-if="type('checkbox')" v-bind="pass" :is-on="isTrue"/>
             <div v-else-if="type('formula')">

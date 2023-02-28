@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineComponent, onBeforeMount, onMounted } from 'vue'
+import { defineComponent, onMounted } from 'vue'
 import type { TableBlockProperties } from '@/lib/types';
 import { defineNotionProps,useNotionBlock } from '@/lib/blockable';
 import { useDatabase,defineDatabaseProps } from '@/lib/database'
@@ -8,7 +8,7 @@ import NotionDBTableCell from '@/blocks/helpers/database-table-cell.vue'
 const props = defineProps({...defineDatabaseProps, ...defineNotionProps })
 
 //@ts-ignore
-const { pass,parent,properties:blockProperties } = useNotionBlock(props)
+const { pass } = useNotionBlock(props)
 //@ts-ignore
 const { schema,data,properties,preloadRelation,setProps } = useDatabase(props)
 

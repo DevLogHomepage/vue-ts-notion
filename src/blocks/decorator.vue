@@ -38,11 +38,11 @@ const target = computed(() => {
 
 const name = (id:string) => {
   const data = TableMap.value.value[id]
-  const parentId = data.parent_id_title as string
-  const relationSchema = (props.blockMap as BlockMap)[parentId].collection.schema
+  if(!data) return ''
+  const parentId = data?.parent_id_title as string
+  const relationSchema = (props.blockMap as BlockMap)[parentId]?.collection.schema ?? []
   const [_,value] = Object.entries(relationSchema).find(([_,value]) => value.type === 'title') ?? ['','']
-
-  return data[(value as ColumnSchemaType).name][0][0]
+  return data[(value as ColumnSchemaType)?.name][0][0]
 }
 
 const dateFormated = (date:string) => {
@@ -62,7 +62,6 @@ export default {
 </script>
 
 <template>
-  <!-- {{ decoratorKey }} -->
   <span v-if="decoratorKey === 'p'">
     {{ name(decoratorValue as string) }}
   </span>

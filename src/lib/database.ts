@@ -1,5 +1,5 @@
 import { computed, PropType, ref } from "vue";
-import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, tableValueProperties, BlockValue, AggregationType, DecorationType, DateFormat, SubDecorationType, PercentFormatType } from "./types";
+import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, tableValueProperties, BlockValue, AggregationType, DecorationType, subDateFormat, SubDecorationType, PercentFormatType } from "./types";
 
 type FormulaBaseType=
     number
@@ -89,19 +89,18 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
                 return [[tableData[schemaData.name]?.[0][0],[['_']]]]
             case 'file': //파일과 미디어
                 return [['file‣',tableData[schemaData.name]?.[0][1]]] as DecorationType[]
-            // case 'relation':
-            // case 'rollup':
-            //     const relation = tableData[schemaData.name]?.map(e => e?.[1]?.[0]).filter(e => e !== undefined)
-            //     console.log('relation',relation)
-            //     if(!relation) return tableData[schemaData.name]
-
-            //     const realtionId = relation.map(e => e?.[1])
-            //     const relationData = realtionId.map( e => TableMap.value.value[e as string])
-            //     const relationSchema = props.blockMap[relationData[0].parent_id_title].collection.schema
-            //     const [_,value] = Object.entries(relationSchema).find(([_,value]) => value.type === 'title') ?? ['','']
-            //     return relationData.map(e => e[(value as ColumnSchemaType).name][0])
         }
         return tableData[schemaData.name]
+    }
+
+    const getRollupText = (id:string):string => {
+        if(!id) return ''
+        const data = TableMap.value.value[id]
+        if(!data) return ''
+        const parentId = data?.parent_id_title as string
+        const relationSchema = props.blockMap[parentId]?.collection.schema ?? []
+        const [_,value] = Object.entries(relationSchema).find(([_,value]) => value.type === 'title') ?? ['','']
+        return data[(value as ColumnSchemaType)?.name][0][0]
     }
 
     /**
@@ -206,7 +205,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         // all decorationValue of the `decorationType` Array
         const allDateValue = allTesting?.map(e => e?.[0][1]).filter(e => e !== undefined)
         // all Date data of the `decorationType` Array
-        const allDates = allDateValue?.map(e => (e?.[0]?.[1] as DateFormat)?.start_date).concat(allDateValue.map(e => (e?.[0]?.[1] as DateFormat)?.end_date))
+        const allDates = allDateValue?.map(e => (e?.[0]?.[1] as subDateFormat)?.start_date).concat(allDateValue.map(e => (e?.[0]?.[1] as subDateFormat)?.end_date))
         
         switch(cellSchema.aggregation){
             case "show_unique":
@@ -572,6 +571,7 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         parent,
         data,
         schema,
+        getRollupText,
         getProps,
         setProps,
         preloadRelation
