@@ -13,6 +13,7 @@
   --bg-color-0: rgba(135, 131, 120, 0.15);
   --bg-color-1: rgb(247, 246, 243);
   --bg-color-2: rgba(135, 131, 120, 0.15);
+  --bg-color-3: var(--bg-color);
 
   --select-color-0: rgb(46, 170, 220);
   --select-color-1: rgba(45, 170, 219, 0.3);
@@ -63,17 +64,12 @@
 
   --notion-max-width: 720px;
   --notion-header-height: 45px;
-/* rgba(227, 226, 224 0.5 default
-  227,226,224 grey
-  238,224,218 brown
-  250,222,201 orange
-  253,236,200 yellow
-  219,237,219 green
-  211,229,239 blue
-  232,222,238 purple
-  245,224,233 pink
-  255,226,221 red
-*/
+
+  --notion-scroll-thumb: #d3d1cb;
+  --notion-scroll-hover: #c2c1bf;
+  --notion-scroll-track: #edece9;
+
+
   --notion-select-default: rgba(227, 226, 224,0.5);
   --notion-select-grey: rgb(227,226,224);
   --notion-select-brown: rgb(238,224,218);
@@ -85,9 +81,12 @@
   --notion-select-pink: rgb(245,224,233);
   --notion-select-red: rgb(255,226,221);
 
+  --notion-datatable-color:rgb(55,53,46);
+  --notion-datetable-choose:rgba(55,53,47,0.65);
+  --notion-datetable-border:rgb(233,233,231);
 }
 
-.dark-mode {
+.dark-mode,.dark {
   --fg-color: rgba(255, 255, 255, 0.9);
   --fg-color-0: var(--fg-color);
   --fg-color-1: var(--fg-color);
@@ -102,6 +101,7 @@
   --bg-color-0: rgb(71, 76, 80);
   --bg-color-1: rgb(63, 68, 71);
   --bg-color-2: rgba(135, 131, 120, 0.15);
+  --bg-color-3: rgba(25, 25, 25, 1);
 
   --select-color-checkbox: rgb(35, 131, 221);
 
@@ -133,6 +133,26 @@
   --notion-orange_background_co: rgba(89, 74, 58, 0.3);
   --notion-brown_background_co: rgba(67, 64, 64, 0.3);
   --notion-gray_background_co: rgba(69, 75, 78, 0.3);
+
+  --notion-scroll-thumb: rgb(71, 76, 80);
+  --notion-scroll-hover: rgb(83, 84, 84);
+  --notion-scroll-track: rgb(32, 32, 32);
+
+
+  --notion-select-default: rgb(55, 55, 55);
+  --notion-select-grey: rgb(90, 90, 90);
+  --notion-select-brown: rgb(96, 59, 44);
+  --notion-select-orange: rgb(133, 76, 29);
+  --notion-select-yellow: rgb(137, 99, 42);
+  --notion-select-green: rgb(43, 89, 63);
+  --notion-select-blue: rgb(40, 69, 108);
+  --notion-select-purple: rgb(73, 47, 100);
+  --notion-select-pink: rgb(105, 49, 76);
+  --notion-select-red: rgb(110, 54, 48);
+
+  --notion-datatable-color:rgba(255, 255, 255, 0.81);;
+  --notion-datetable-choose:rgba(255, 255, 255, 0.443);
+  --notion-datetable-border:rgb(47,47,47);
 }
 
 ::-webkit-scrollbar {
@@ -141,13 +161,13 @@
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d3d1cb;
+  background: var(--notion-scroll-thumb);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #c2c1bf;
+  background: var(--notion-scroll-hover);
 }
 ::-webkit-scrollbar-track {
-  background: #edece9;
+  background: var(--notion-scroll-track);
 }
 *::selection {
   background: rgba(45, 170, 219, 0.3);
@@ -2527,13 +2547,18 @@ pre[class*="language-"] {
   height: 40px;
   width:100%;
   padding: 0;
-  color:rgba(55,53,47,0.65);
+  color:var(--notion-datetable-choose);
 
 }
 .notion-database-table-header{
   display: inline-flex;
   margin: 0;
   height: 100%;
+}
+
+.notion-database-table-section{
+  overflow-x: auto;
+  width: 100%;
 }
 .notion-database-table-header-cell{
   display:flex;
@@ -2550,12 +2575,12 @@ pre[class*="language-"] {
 
 .notion-database-table-row{
   display: flex;
-  background: white;
+  /* background: white; */
   z-index: 83;
   height: 33px;
-  color: rgba(55, 53, 47, 0.65);
-  border-top: 1px solid rgb(233, 233, 231);
-  box-shadow: white -3px 0px 0px, rgb(233 233 231) 0px 1px 0px;
+  color: var(--notion-datetable-choose);
+  border-top: 1px solid var(--notion-datetable-border);
+  box-shadow: var(--bg-color-3) -3px 0px 0px, var(--notion-datetable-border) 0px 1px 0px;
   min-width: calc(100% - 0px);
   left: 0px;
   right: 0px;
@@ -2577,12 +2602,12 @@ pre[class*="language-"] {
   overflow: hidden;
   font-size: 14px;
   padding: 0;
-  border-right: 1px solid rgba(55,53,47,0.09);
+  border-right: 1px solid var(--notion-datetable-border);
 
 }
 
 .notion-database-table-data.header{
-  color:rgb(55,53,46) !important;
+  color:var(--notion-datatable-color) !important;
 }
 
 .notion-database-table-data.header u,a{
@@ -2620,6 +2645,7 @@ pre[class*="language-"] {
   height: 16px;
   display: flex;
   justify-content: center;
+  fill: currentColor;
 }
 
 .checkbox-icon-container{
@@ -2635,10 +2661,6 @@ pre[class*="language-"] {
 
 .checkbox-true{
   background-color: var(--select-color-checkbox);
-}
-
-.checkbox-false{
-  border: solid 1.5px var(--select);
 }
 
 .checkbox-true svg{
