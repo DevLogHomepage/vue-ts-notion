@@ -1,3 +1,4 @@
+import tableOfContentsItemVue from "@/blocks/helpers/table-of-contents-item.vue";
 import { computed, PropType, ref } from "vue";
 import { NotionBlockProps,NotionDatabaseProps,Formula, ColumnSchemaType, tableValueProperties, BlockValue, AggregationType, DecorationType, subDateFormat, SubDecorationType, PercentFormatType } from "./types";
 
@@ -57,6 +58,11 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
     // collection view's schema data
     const schema = computed(() => parent.value.collection.schema)
     
+
+    const getData = (dataId:string) => {
+        return TableMap.value.value[dataId] ?? undefined
+    }
+
     /**
      * get specific data in the table row data
      * 
@@ -574,7 +580,8 @@ export const useDatabase = (props: Readonly<NotionBlockProps & NotionDatabasePro
         getRollupText,
         getProps,
         setProps,
-        preloadRelation
+        preloadRelation,
+        getData
     }
 
 }

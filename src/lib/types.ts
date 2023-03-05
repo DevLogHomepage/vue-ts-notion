@@ -117,22 +117,23 @@ export interface Collection {
 };
 
 export interface BaseValueType {
-  id: string;
-  type: string;
-  version: number;
-  created_time: number;
-  last_edited_time: number;
-  parent_id: string;
-  parent_table: string;
-  alive: boolean;
-  created_by_table: string;
-  created_by_id: string;
-  last_edited_by_table: string;
-  last_edited_by_id: string;
-  content?: string[];
+  id: string
+  type: string
+  version: number
+  created_time: number
+  last_edited_time: number
+  parent_id: string
+  parent_table: string
+  alive: boolean
+  created_by_table: string
+  created_by_id: string
+  last_edited_by_table: string
+  last_edited_by_id: string
+  content?: string[]
 
-  format:Format;
-  properties: Properties | tableValueProperties;
+  format:Format
+  properties: Properties | tableValueProperties
+  page_sort:string[]
 
   name:string
 }
@@ -195,6 +196,7 @@ export interface BlockValue {
   last_edited_by_table: string
   last_edited_by_id: string
   space_id: string
+  page_sort:string[]
 
   name?: string
 }

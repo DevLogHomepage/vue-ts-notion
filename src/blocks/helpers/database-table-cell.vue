@@ -58,7 +58,7 @@ export default defineComponent({
 </script>
 
 <template>
-    <div class="notion-database-table-cell">
+    <div v-if="props.schemaData !== undefined" class="notion-database-table-cell">
         <div class="notion-database-table-text">
             <!-- {{ getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties) }} -->
             <NotionTextRenderer v-if="!data" v-bind="pass" :text="getProps(props.schemaData as ColumnSchemaType,props.data as tableValueProperties)"/>
